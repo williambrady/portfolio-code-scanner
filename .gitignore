@@ -205,3 +205,28 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ========================================
+# AWS Quick Assess - Scan Artifacts
+# ========================================
+# Scan reports directory
+reports/
+*-scan-report.json
+*-scan-report.html
+*-scan-report.md
+
+# Log files
+logs/
+*.log
+
+# Temporary scanner outputs
+/tmp/gitleaks-report.json
+.gitleaks-report.json
+gitleaks-report.json
+
+# Docker build artifacts
+.dockerignore
+
+# Configuration overrides (keep config.yaml template in repo)
+config/config.local.yaml
+config/*.local.yaml

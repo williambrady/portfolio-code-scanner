@@ -1,0 +1,93 @@
+# Example workflow showing how to use AWS Quick Assess in your repository
+# Copy this file to your repository's .github/workflows/ directory
+
+name: Security Scan
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  # Allow manual triggering
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write  # Required for uploading SARIF to Code Scanning
+
+jobs:
+  security-scan:
+    name: AWS Quick Assess Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run AWS Quick Assess
+        id: security-scan
+        uses: crofton-cloud/aws-quick-assess@v1
+        with:
+          # Scan the entire repository (default)
+          scan-path: '.'
+
+          # Output formats - sarif enables GitHub Code Scanning integration
+          output-formats: 'json,html,sarif'
+
+          # Fail if HIGH or CRITICAL findings detected
+          fail-on-severity: 'HIGH'
+
+          # Optional: Snyk token for enhanced scanning
+          # snyk-token: ${{ secrets.SNYK_TOKEN }}
+
+          # Enable verbose output for debugging
+          verbose: 'false'
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && steps.security-scan.outputs.sarif-path != ''
+        with:
+          sarif_file: ${{ steps.security-scan.outputs.sarif-path }}
+          category: 'aws-quick-assess'
+
+      - name: Upload scan reports as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-reports
+          path: .aws-quick-assess-reports/
+          retention-days: 30
+
+      - name: Post scan summary comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const findings = '${{ steps.security-scan.outputs.findings-count }}';
+            const critical = '${{ steps.security-scan.outputs.critical-count }}';
+            const high = '${{ steps.security-scan.outputs.high-count }}';
+            const medium = '${{ steps.security-scan.outputs.medium-count }}';
+            const low = '${{ steps.security-scan.outputs.low-count }}';
+            const status = '${{ steps.security-scan.outputs.scan-status }}';
+
+            const statusEmoji = status === 'passed' ? ':white_check_mark:' : ':x:';
+
+            const body = `## AWS Quick Assess Security Scan ${statusEmoji}
+
+            | Severity | Count |
+            |----------|-------|
+            | Critical | ${critical} |
+            | High | ${high} |
+            | Medium | ${medium} |
+            | Low | ${low} |
+            | **Total** | **${findings}** |
+
+            *View the full report in the [Actions artifacts](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})*
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

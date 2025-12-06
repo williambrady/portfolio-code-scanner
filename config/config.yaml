@@ -1,0 +1,228 @@
+# AWS Quick Assess Configuration
+
+# Docker Configuration
+docker:
+  base_image: "python:3.11-slim"
+  dockerfile_path: "./Dockerfile"
+  container_name: "aws-quick-assess"
+  working_dir: "/app"
+
+# Repository Scanning Configuration
+repository:
+  default_path: "/repo"
+  excluded_paths:
+    - ".git"
+    - "node_modules"
+    - ".terraform"
+    - "venv"
+    - "__pycache__"
+    - "*.pyc"
+    - "tests"
+    - "test"
+    - "**/fixtures"
+
+# AWS Configuration
+aws:
+  default_region: "us-east-1"
+  regions_to_scan:
+    - "us-east-1"
+  # Set to true to scan all regions (overrides regions_to_scan)
+  scan_all_regions: false
+
+# Severity Thresholds
+severity:
+  # Levels: CRITICAL, HIGH, MEDIUM, LOW, INFO
+  fail_on: "HIGH"  # Exit with error code if findings at this level or above
+  report_minimum: "LOW"  # Only report findings at this level or above
+
+# Output Configuration
+output:
+  directory: "/app/reports"
+  formats:
+    - "json"
+    - "html"
+    - "markdown"
+  timestamp_reports: true
+  archive_old_reports: true
+  verbose: false
+
+# Tool Enable/Disable Flags
+tools:
+  # Terraform Scanners
+  terraform:
+    enabled: true
+    terraform_fmt: true
+    terraform_validate: true
+    tflint: true
+    checkov: true
+    tfsec: true
+    trivy: true
+    terrascan: false  # Optional
+    kics: false  # Optional
+    regula: false  # Optional
+    conftest: false  # Optional
+    # Rule exclusions/exceptions
+    exclude_rules:
+      tflint:
+        - "terraform_required_version"  # Not applicable - no production Terraform code
+      tfsec: []  # Example: ["aws-s3-enable-versioning"]
+      checkov:
+        - "CKV_AWS_116" # Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)
+        - "CKV_AWS_117" # Ensure that AWS Lambda function is configured inside a VPC
+      trivy:
+        - "DS014"  # wget and curl - Both needed (wget for binaries, curl for AWS CLI)
+        - "DS026"  # HEALTHCHECK - Not needed for CLI tool container
+
+  # CloudFormation Scanners
+  cloudformation:
+    enabled: true
+    cfn_lint: true
+    cfn_nag: true
+    checkov: true
+    # Rule exclusions/exceptions - Add rule IDs to exclude from findings
+    # Rule IDs can be found in scan reports or tool documentation
+    exclude_rules:
+      cfn_lint: []  # Example: ["W2001", "E3012"]
+                    # Docs: https://github.com/aws-cloudformation/cfn-lint
+      cfn_nag: ["W89"]  # W89: Lambda functions should be deployed inside a VPC
+                        # W92: Lambda functions should define ReservedConcurrentExecutions
+                        # Docs: https://github.com/stelligent/cfn_nag
+      checkov:
+        - "CKV_AWS_116" # Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)
+        - "CKV_AWS_117" # Ensure that AWS Lambda function is configured inside a VPC
+
+  # Python Scanners
+  python:
+    enabled: true
+    bandit: true  # Python code security scanner
+    safety: true  # Dependency vulnerability scanner
+    pylint: true  # Python code quality and style linter
+    # Rule exclusions/exceptions
+    exclude_rules:
+      bandit:
+        - "B404"  # subprocess import - Required for security scanner tool
+        - "B603"  # subprocess call - Safe, we use shell=False
+        - "B110"  # Try/Except/Pass - Safe error handling in config parsing
+        - "B112"  # Try/Except/Continue - Safe error handling in file detection
+                  # Docs: https://bandit.readthedocs.io/
+      safety: []  # Example: ["CVE-2021-12345", "44715"]
+                  # Docs: https://github.com/pyupio/safety
+      pylint:
+        - "C0301"  # line-too-long - Many long lines are acceptable for clarity
+        - "R0913"  # too-many-arguments
+        - "R0914"  # too-many-locals
+        - "R0917 " # too-many-positional-arguments
+
+  # CDK Scanners
+  cdk:
+    enabled: true
+    cdk_synth: true
+    cdk_nag: true
+    # Language-specific linters (auto-detected)
+    eslint: true  # TypeScript/JavaScript
+    pylint: true  # Python
+    checkstyle: false  # Java
+    stylecop: false  # .NET
+
+  # npm/Node.js Scanners
+  npm:
+    enabled: true
+    npm_audit: true
+    snyk: true
+    owasp_dependency_check: false  # Optional
+    # Rule exclusions/exceptions
+    exclude_rules:
+      snyk: []  # Example: ["SNYK-CC-TF-1", "SNYK-CC-K8S-2"]
+                # Docs: https://snyk.io/iac-security-rules/
+
+  # Secrets Detection
+  secrets:
+    enabled: true
+    gitleaks: true
+    trufflehog: false  # Optional
+    # Rule exclusions/exceptions
+    exclude_rules:
+      gitleaks: []  # Example: ["generic-api-key", "aws-access-token"]
+    git_secrets: false  # Optional
+
+  # AWS Live Scanning
+  aws_live:
+    enabled: true
+    security_hub: true
+    config: true
+    trusted_advisor: false  # Requires Business/Enterprise support
+    prowler: true
+    scoutsuite: false  # Optional
+
+# Tool-Specific Configuration
+tool_config:
+  checkov:
+    skip_checks: []
+    framework: "all"
+    compact: false
+    quiet: false
+
+  tfsec:
+    minimum_severity: "LOW"
+    exclude: []
+
+  trivy:
+    severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+    exit_code: 0
+    ignore_unfixed: false
+
+  tflint:
+    config_file: ".tflint.hcl"
+
+  cfn_nag:
+    rules_directory: null
+    allow_suppression: true
+    profile_path: null
+
+  cfn_lint:
+    regions: ["us-east-1"]
+    ignore_checks: []
+
+  gitleaks:
+    config_path: null
+    verbose: false
+    redact: true
+
+  prowler:
+    services: []  # Empty = all services
+    severity: "critical,high,medium,low"
+    compliance: []  # e.g., ["cis_1.5_aws", "hipaa"]
+
+  snyk:
+    severity_threshold: "low"
+    fail_on: "high"
+    org: null  # Snyk organization ID (optional - leave as null to use default org from token)
+    auth_token_env: "SNYK_AUTH"  # Environment variable name containing Snyk authentication token
+
+# Parallel Execution
+execution:
+  parallel: true
+  max_workers: 4
+  timeout_per_scanner: 600  # seconds
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "/app/logs/aws-quick-assess.log"
+  console: true
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Report Aggregation
+aggregation:
+  deduplicate: true
+  normalize_paths: true
+  group_by_severity: true
+  group_by_file: true
+  include_tool_metadata: true
+
+# Optional Features
+features:
+  sbom_generation: false
+  baseline_comparison: false
+  suppression_file: null
+  custom_policies_dir: null

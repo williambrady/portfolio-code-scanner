@@ -1,0 +1,68 @@
+name: 'AWS Quick Assess'
+description: 'Security scanner for AWS Infrastructure-as-Code (Terraform, CloudFormation, CDK) with multi-tool analysis'
+author: 'Crofton Cloud'
+
+branding:
+  icon: 'shield'
+  color: 'orange'
+
+inputs:
+  scan-path:
+    description: 'Path to scan (relative to repository root)'
+    required: false
+    default: '.'
+  config-path:
+    description: 'Path to custom config.yaml file'
+    required: false
+    default: ''
+  output-formats:
+    description: 'Comma-separated list of output formats (json,html,markdown,sarif)'
+    required: false
+    default: 'json,sarif'
+  fail-on-severity:
+    description: 'Fail the action if findings at this severity or above (CRITICAL,HIGH,MEDIUM,LOW,INFO,NONE)'
+    required: false
+    default: 'HIGH'
+  snyk-token:
+    description: 'Snyk API token for enhanced scanning (optional)'
+    required: false
+    default: ''
+  upload-sarif:
+    description: 'Upload SARIF results to GitHub Code Scanning'
+    required: false
+    default: 'true'
+  verbose:
+    description: 'Enable verbose output'
+    required: false
+    default: 'false'
+
+outputs:
+  findings-count:
+    description: 'Total number of security findings'
+  critical-count:
+    description: 'Number of CRITICAL severity findings'
+  high-count:
+    description: 'Number of HIGH severity findings'
+  medium-count:
+    description: 'Number of MEDIUM severity findings'
+  low-count:
+    description: 'Number of LOW severity findings'
+  report-path:
+    description: 'Path to the generated report directory'
+  sarif-path:
+    description: 'Path to the SARIF report file (if generated)'
+  scan-status:
+    description: 'Scan result status (passed/failed)'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  entrypoint: '/app/entrypoint.sh'
+  env:
+    INPUT_SCAN_PATH: ${{ inputs.scan-path }}
+    INPUT_CONFIG_PATH: ${{ inputs.config-path }}
+    INPUT_OUTPUT_FORMATS: ${{ inputs.output-formats }}
+    INPUT_FAIL_ON_SEVERITY: ${{ inputs.fail-on-severity }}
+    INPUT_SNYK_TOKEN: ${{ inputs.snyk-token }}
+    INPUT_UPLOAD_SARIF: ${{ inputs.upload-sarif }}
+    INPUT_VERBOSE: ${{ inputs.verbose }}
