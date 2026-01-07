@@ -23,7 +23,7 @@ class MarkdownFormatter:
         timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
         output_file = Path(output_path) / f"{timestamp}-scan-report.md"
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(self._generate_markdown(report_data))
 
         return str(output_file)
@@ -36,22 +36,24 @@ class MarkdownFormatter:
         md.append("# AWS Quick Assess - Security Scan Report\n")
         md.append(f"**Repository:** {report_data.get('repository', 'N/A')}\n")
         # Add branch if available
-        if report_data.get('branch'):
+        if report_data.get("branch"):
             md.append(f"**Branch:** {report_data.get('branch')}\n")
         md.append(f"**Scan Date:** {report_data.get('scan_timestamp', 'N/A')}\n")
         md.append("---\n")
 
         # Summary
-        summary = report_data.get('summary', {})
+        summary = report_data.get("summary", {})
         md.append("## Summary\n")
         md.append(f"- **Total Findings:** {summary.get('total_findings', 0)}")
         md.append(f"- **Files Scanned:** {summary.get('unique_files', 0)}")
-        md.append(f"- **Scanners Run:** {', '.join(report_data.get('metadata', {}).get('scanners_run', []))}\n")
+        md.append(
+            f"- **Scanners Run:** {', '.join(report_data.get('metadata', {}).get('scanners_run', []))}\n"
+        )
 
         # Severity Breakdown
         md.append("### Findings by Severity\n")
-        by_severity = summary.get('by_severity', {})
-        for severity in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']:
+        by_severity = summary.get("by_severity", {})
+        for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]:
             count = by_severity.get(severity, 0)
             if count > 0:
                 md.append(f"- **{severity}:** {count}")
@@ -59,14 +61,14 @@ class MarkdownFormatter:
 
         # Tool Breakdown
         md.append("### Findings by Tool\n")
-        by_tool = summary.get('by_tool', {})
+        by_tool = summary.get("by_tool", {})
         for tool, count in sorted(by_tool.items(), key=lambda x: x[1], reverse=True):
             md.append(f"- **{tool}:** {count}")
         md.append("\n---\n")
 
         # Findings Details
         md.append("## Findings Details\n")
-        findings = report_data.get('findings', [])
+        findings = report_data.get("findings", [])
 
         if not findings:
             md.append("No findings detected.\n")
@@ -74,30 +76,34 @@ class MarkdownFormatter:
             # Group by severity
             by_sev = {}
             for finding in findings:
-                sev = finding.get('severity', 'INFO')
+                sev = finding.get("severity", "INFO")
                 if sev not in by_sev:
                     by_sev[sev] = []
                 by_sev[sev].append(finding)
 
             # Output by severity
-            for severity in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']:
+            for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]:
                 if severity in by_sev:
-                    md.append(f"### {severity} Severity ({len(by_sev[severity])} findings)\n")
+                    md.append(
+                        f"### {severity} Severity ({len(by_sev[severity])} findings)\n"
+                    )
                     for i, finding in enumerate(by_sev[severity], 1):
                         md.append(f"#### {i}. {finding.get('title', 'Untitled')}")
-                        md.append(f"- **Severity:** {finding.get('severity', 'UNKNOWN')}")
+                        md.append(
+                            f"- **Severity:** {finding.get('severity', 'UNKNOWN')}"
+                        )
                         md.append(f"- **Tool:** {finding.get('tool', 'Unknown')}")
                         md.append(f"- **Rule:** {finding.get('rule_id', 'N/A')}")
-                        if finding.get('file_path'):
+                        if finding.get("file_path"):
                             location = f"{finding['file_path']}"
-                            if finding.get('line_number'):
+                            if finding.get("line_number"):
                                 location += f":{finding['line_number']}"
                             md.append(f"- **Location:** `{location}`")
-                        if finding.get('resource'):
+                        if finding.get("resource"):
                             md.append(f"- **Resource:** {finding['resource']}")
-                        if finding.get('description'):
+                        if finding.get("description"):
                             md.append(f"- **Description:** {finding['description']}")
-                        if finding.get('remediation'):
+                        if finding.get("remediation"):
                             md.append(f"- **Remediation:** {finding['remediation']}")
                         md.append("")
 

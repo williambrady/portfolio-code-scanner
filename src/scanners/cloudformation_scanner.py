@@ -24,9 +24,16 @@ class CloudFormationScanner(ScannerBase):
         """
         # Exclude common non-CFN files
         exclude_patterns = [
-            'package.json', 'package-lock.json', 'tsconfig.json',
-            'manifest.json', '.eslintrc.json', 'jest.config.json',
-            'node_modules', '.git', 'test', 'spec'
+            "package.json",
+            "package-lock.json",
+            "tsconfig.json",
+            "manifest.json",
+            ".eslintrc.json",
+            "jest.config.json",
+            "node_modules",
+            ".git",
+            "test",
+            "spec",
         ]
 
         # Check if file should be excluded
@@ -36,17 +43,19 @@ class CloudFormationScanner(ScannerBase):
                 return False
 
         # Only check files with CFN-like extensions
-        if not file_path.suffix in ['.template', '.yaml', '.yml', '.json']:
+        if file_path.suffix not in [".template", ".yaml", ".yml", ".json"]:
             return False
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read(2000)  # Read enough to find markers
 
                 # Must have CloudFormation-specific markers
-                has_cfn_version = 'AWSTemplateFormatVersion' in content
-                has_aws_resources = 'AWS::' in content
-                has_resources_section = '"Resources"' in content or 'Resources:' in content
+                has_cfn_version = "AWSTemplateFormatVersion" in content
+                has_aws_resources = "AWS::" in content
+                has_resources_section = (
+                    '"Resources"' in content or "Resources:" in content
+                )
 
                 # Exclude files that look like other types
                 is_package_json = '"dependencies"' in content and '"name"' in content
@@ -111,7 +120,9 @@ class CloudFormationScanner(ScannerBase):
         if self.config.get("tools", {}).get("cloudformation", {}).get("checkov", True):
             self.findings.extend(self._run_checkov(path))
 
-        self.logger.info("CloudFormation scanners found %s findings", len(self.findings))
+        self.logger.info(
+            "CloudFormation scanners found %s findings", len(self.findings)
+        )
         return self.findings
 
     def _run_cfn_lint(self, path: str) -> List[Finding]:
@@ -129,12 +140,16 @@ class CloudFormationScanner(ScannerBase):
         self.logger.info("Running cfn-lint on %s templates", len(cfn_templates))
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("cloudformation", {}).get("exclude_rules", {}).get("cfn_lint", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("cloudformation", {})
+            .get("exclude_rules", {})
+            .get("cfn_lint", [])
+        )
 
         # Run cfn-lint on all templates
         _, stdout, stderr = self.execute_command(
-            ["cfn-lint"] + cfn_templates + ["--format", "json"],
-            cwd=path
+            ["cfn-lint"] + cfn_templates + ["--format", "json"], cwd=path
         )
 
         try:
@@ -148,16 +163,24 @@ class CloudFormationScanner(ScannerBase):
                         self.logger.debug("Skipping excluded rule %s", rule_id)
                         continue
 
-                    findings.append(Finding(
-                        tool="cfn-lint",
-                        severity=self.severity_from_string(issue.get("Level", "Warning")),
-                        rule_id=rule_id,
-                        title=issue.get("Rule", {}).get("ShortDescription", "Validation issue"),
-                        description=issue.get("Message", ""),
-                        file_path=issue.get("Filename"),
-                        line_number=issue.get("Location", {}).get("Start", {}).get("LineNumber"),
-                        metadata=issue
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="cfn-lint",
+                            severity=self.severity_from_string(
+                                issue.get("Level", "Warning")
+                            ),
+                            rule_id=rule_id,
+                            title=issue.get("Rule", {}).get(
+                                "ShortDescription", "Validation issue"
+                            ),
+                            description=issue.get("Message", ""),
+                            file_path=issue.get("Filename"),
+                            line_number=issue.get("Location", {})
+                            .get("Start", {})
+                            .get("LineNumber"),
+                            metadata=issue,
+                        )
+                    )
                 self.logger.info("cfn-lint found %s findings", len(findings))
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse cfn-lint output: %s", e)
@@ -181,9 +204,14 @@ class CloudFormationScanner(ScannerBase):
         self.logger.info("Running cfn-nag on %s templates", len(cfn_templates))
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("cloudformation", {}).get("exclude_rules", {}).get("cfn_nag", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("cloudformation", {})
+            .get("exclude_rules", {})
+            .get("cfn_nag", [])
+        )
         if exclude_rules:
-            self.logger.info("cfn-nag excluding rules: %s", ', '.join(exclude_rules))
+            self.logger.info("cfn-nag excluding rules: %s", ", ".join(exclude_rules))
 
         # cfn-nag can scan multiple files with --input-path pointing to individual files
         # We'll scan each template individually to ensure proper validation
@@ -192,7 +220,7 @@ class CloudFormationScanner(ScannerBase):
         for template in cfn_templates:
             _, stdout, stderr = self.execute_command(
                 ["cfn_nag_scan", "--input-path", template, "--output-format", "json"],
-                cwd=path
+                cwd=path,
             )
 
             if stdout:
@@ -200,7 +228,9 @@ class CloudFormationScanner(ScannerBase):
                     result = json.loads(stdout)
                     all_results.extend(result)
                 except json.JSONDecodeError as e:
-                    self.logger.debug("Failed to parse cfn-nag output for %s: %s", template, e)
+                    self.logger.debug(
+                        "Failed to parse cfn-nag output for %s: %s", template, e
+                    )
                     continue
 
         # Process all results
@@ -212,7 +242,9 @@ class CloudFormationScanner(ScannerBase):
                     file_name = file_result.get("filename", "unknown")
 
                     # Process violations (can be WARN or FAIL type)
-                    violations = file_result.get("file_results", {}).get("violations", [])
+                    violations = file_result.get("file_results", {}).get(
+                        "violations", []
+                    )
                     for violation in violations:
                         rule_id = violation.get("id", "UNKNOWN")
 
@@ -224,25 +256,35 @@ class CloudFormationScanner(ScannerBase):
 
                         # Determine severity based on type
                         violation_type = violation.get("type", "WARN")
-                        severity = Severity.HIGH if violation_type == "FAIL" else Severity.MEDIUM
+                        severity = (
+                            Severity.HIGH
+                            if violation_type == "FAIL"
+                            else Severity.MEDIUM
+                        )
 
                         line_numbers = violation.get("line_numbers", [])
                         line_number = line_numbers[0] if line_numbers else None
 
-                        findings.append(Finding(
-                            tool="cfn-nag",
-                            severity=severity,
-                            rule_id=rule_id,
-                            title=violation.get("message", "Security violation"),
-                            description=violation.get("message", ""),
-                            file_path=file_name,
-                            line_number=line_number,
-                            resource=", ".join(violation.get("logical_resource_ids", [])),
-                            metadata=violation
-                        ))
+                        findings.append(
+                            Finding(
+                                tool="cfn-nag",
+                                severity=severity,
+                                rule_id=rule_id,
+                                title=violation.get("message", "Security violation"),
+                                description=violation.get("message", ""),
+                                file_path=file_name,
+                                line_number=line_number,
+                                resource=", ".join(
+                                    violation.get("logical_resource_ids", [])
+                                ),
+                                metadata=violation,
+                            )
+                        )
 
                 if excluded_count > 0:
-                    self.logger.info("cfn-nag excluded %s findings based on config", excluded_count)
+                    self.logger.info(
+                        "cfn-nag excluded %s findings based on config", excluded_count
+                    )
                 self.logger.info("cfn-nag found %s findings", len(findings))
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse cfn-nag output: %s", e)
@@ -269,12 +311,26 @@ class CloudFormationScanner(ScannerBase):
         cfn_template_basenames = {Path(t).name for t in cfn_templates}
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("cloudformation", {}).get("exclude_rules", {}).get("checkov", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("cloudformation", {})
+            .get("exclude_rules", {})
+            .get("checkov", [])
+        )
         if exclude_rules:
-            self.logger.info("Checkov excluding rules: %s", ', '.join(exclude_rules))
+            self.logger.info("Checkov excluding rules: %s", ", ".join(exclude_rules))
 
         # Build command with path exclusions
-        cmd = ["checkov", "-d", path, "--framework", "cloudformation", "--output", "json", "--quiet"]
+        cmd = [
+            "checkov",
+            "-d",
+            path,
+            "--framework",
+            "cloudformation",
+            "--output",
+            "json",
+            "--quiet",
+        ]
 
         # Add excluded paths
         excluded_paths = self.get_excluded_paths()
@@ -307,22 +363,28 @@ class CloudFormationScanner(ScannerBase):
                     # Try to get severity from check metadata, fallback to intelligent mapping
                     severity = self._map_checkov_severity(check)
 
-                    findings.append(Finding(
-                        tool="checkov-cfn",
-                        severity=severity,
-                        rule_id=rule_id,
-                        title=check.get("check_name", "Policy violation"),
-                        description=check.get("check_result", {}).get("result", ""),
-                        file_path=check.get("file_path"),
-                        line_number=check.get("file_line_range", [None])[0],
-                        resource=check.get("resource", ""),
-                        remediation=check.get("guideline"),
-                        metadata=check
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="checkov-cfn",
+                            severity=severity,
+                            rule_id=rule_id,
+                            title=check.get("check_name", "Policy violation"),
+                            description=check.get("check_result", {}).get("result", ""),
+                            file_path=check.get("file_path"),
+                            line_number=check.get("file_line_range", [None])[0],
+                            resource=check.get("resource", ""),
+                            remediation=check.get("guideline"),
+                            metadata=check,
+                        )
+                    )
 
                 if excluded_count > 0:
-                    self.logger.info("Checkov excluded %s findings based on config", excluded_count)
-                self.logger.info("Checkov found %s findings (after filtering)", len(findings))
+                    self.logger.info(
+                        "Checkov excluded %s findings based on config", excluded_count
+                    )
+                self.logger.info(
+                    "Checkov found %s findings (after filtering)", len(findings)
+                )
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse Checkov output: %s", e)
 
@@ -338,27 +400,47 @@ class CloudFormationScanner(ScannerBase):
 
         # CRITICAL: Exposed secrets, public access to sensitive resources
         critical_patterns = [
-            "public", "exposed", "secret", "password", "credential",
-            "0.0.0.0/0", "open to internet", "publicly accessible"
+            "public",
+            "exposed",
+            "secret",
+            "password",
+            "credential",
+            "0.0.0.0/0",
+            "open to internet",
+            "publicly accessible",
         ]
 
         # HIGH: Missing encryption, overly permissive policies, security misconfigurations
         high_patterns = [
-            "encryption", "kms", "ssl", "tls", "https",
-            "iam", "policy", "permission", "wildcard",
-            "mfa", "root account", "admin"
+            "encryption",
+            "kms",
+            "ssl",
+            "tls",
+            "https",
+            "iam",
+            "policy",
+            "permission",
+            "wildcard",
+            "mfa",
+            "root account",
+            "admin",
         ]
 
         # MEDIUM: Missing logging, monitoring, best practices
         medium_patterns = [
-            "logging", "log", "monitoring", "cloudtrail", "cloudwatch",
-            "versioning", "backup", "retention", "audit"
+            "logging",
+            "log",
+            "monitoring",
+            "cloudtrail",
+            "cloudwatch",
+            "versioning",
+            "backup",
+            "retention",
+            "audit",
         ]
 
         # LOW: Tags, naming, non-critical configurations
-        low_patterns = [
-            "tag", "name", "description", "metadata"
-        ]
+        low_patterns = ["tag", "name", "description", "metadata"]
 
         # Check patterns against check name
         for pattern in critical_patterns:

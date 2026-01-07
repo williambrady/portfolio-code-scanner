@@ -4,9 +4,8 @@ Runs multiple security and compliance tools against Terraform code
 """
 
 import json
-import os
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List
 from src.scanner_base import ScannerBase, Finding, Severity
 
 
@@ -33,7 +32,11 @@ class TerraformScanner(ScannerBase):
             self.findings.extend(self._run_terraform_fmt(path))
 
         # Run terraform validate
-        if self.config.get("tools", {}).get("terraform", {}).get("terraform_validate", True):
+        if (
+            self.config.get("tools", {})
+            .get("terraform", {})
+            .get("terraform_validate", True)
+        ):
             self.findings.extend(self._run_terraform_validate(path))
 
         # Run tflint
@@ -61,13 +64,12 @@ class TerraformScanner(ScannerBase):
         self.logger.info("Running terraform fmt...")
 
         returncode, stdout, _ = self.execute_command(
-            ["terraform", "fmt", "-check", "-recursive"],
-            cwd=path
+            ["terraform", "fmt", "-check", "-recursive"], cwd=path
         )
 
         # terraform fmt returns non-zero if files need formatting
         if returncode != 0 and stdout:
-            for line in stdout.strip().split('\n'):
+            for line in stdout.strip().split("\n"):
                 if line.strip():
                     file_path = line.strip()
 
@@ -76,15 +78,17 @@ class TerraformScanner(ScannerBase):
                         self.logger.debug("Skipping excluded path: %s", file_path)
                         continue
 
-                    findings.append(Finding(
-                        tool="terraform-fmt",
-                        severity=Severity.LOW,
-                        rule_id="FMT001",
-                        title="Terraform file needs formatting",
-                        description=f"File {line} is not properly formatted",
-                        file_path=file_path,
-                        remediation="Run: terraform fmt"
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="terraform-fmt",
+                            severity=Severity.LOW,
+                            rule_id="FMT001",
+                            title="Terraform file needs formatting",
+                            description=f"File {line} is not properly formatted",
+                            file_path=file_path,
+                            remediation="Run: terraform fmt",
+                        )
+                    )
 
         return findings
 
@@ -95,14 +99,12 @@ class TerraformScanner(ScannerBase):
 
         # First initialize (quietly)
         init_code, _, _ = self.execute_command(
-            ["terraform", "init", "-backend=false"],
-            cwd=path
+            ["terraform", "init", "-backend=false"], cwd=path
         )
 
         if init_code == 0:
             returncode, stdout, _ = self.execute_command(
-                ["terraform", "validate", "-json"],
-                cwd=path
+                ["terraform", "validate", "-json"], cwd=path
             )
 
             if returncode != 0:
@@ -110,16 +112,26 @@ class TerraformScanner(ScannerBase):
                     result = json.loads(stdout)
                     if not result.get("valid", True):
                         for diag in result.get("diagnostics", []):
-                            findings.append(Finding(
-                                tool="terraform-validate",
-                                severity=Severity.HIGH if diag.get("severity") == "error" else Severity.MEDIUM,
-                                rule_id="VAL001",
-                                title="Terraform validation error",
-                                description=diag.get("summary", "Validation failed"),
-                                file_path=diag.get("range", {}).get("filename"),
-                                line_number=diag.get("range", {}).get("start", {}).get("line"),
-                                metadata=diag
-                            ))
+                            findings.append(
+                                Finding(
+                                    tool="terraform-validate",
+                                    severity=(
+                                        Severity.HIGH
+                                        if diag.get("severity") == "error"
+                                        else Severity.MEDIUM
+                                    ),
+                                    rule_id="VAL001",
+                                    title="Terraform validation error",
+                                    description=diag.get(
+                                        "summary", "Validation failed"
+                                    ),
+                                    file_path=diag.get("range", {}).get("filename"),
+                                    line_number=diag.get("range", {})
+                                    .get("start", {})
+                                    .get("line"),
+                                    metadata=diag,
+                                )
+                            )
                 except json.JSONDecodeError:
                     pass
 
@@ -131,8 +143,7 @@ class TerraformScanner(ScannerBase):
         self.logger.info("Running TFLint...")
 
         returncode, stdout, stderr = self.execute_command(
-            ["tflint", "--format=json", "--recursive"],
-            cwd=path
+            ["tflint", "--format=json", "--recursive"], cwd=path
         )
 
         findings = self.parse_output(stdout, stderr, returncode)
@@ -157,18 +168,28 @@ class TerraformScanner(ScannerBase):
             if stdout:
                 result = json.loads(stdout)
                 for issue in result.get("results", []):
-                    findings.append(Finding(
-                        tool="tfsec",
-                        severity=self.severity_from_string(issue.get("severity", "MEDIUM")),
-                        rule_id=issue.get("rule_id", "UNKNOWN"),
-                        title=issue.get("rule_description", "Security issue detected"),
-                        description=issue.get("description", ""),
-                        file_path=issue.get("location", {}).get("filename"),
-                        line_number=issue.get("location", {}).get("start_line"),
-                        resource=issue.get("resource", ""),
-                        remediation=issue.get("links", [None])[0] if issue.get("links") else None,
-                        metadata=issue
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="tfsec",
+                            severity=self.severity_from_string(
+                                issue.get("severity", "MEDIUM")
+                            ),
+                            rule_id=issue.get("rule_id", "UNKNOWN"),
+                            title=issue.get(
+                                "rule_description", "Security issue detected"
+                            ),
+                            description=issue.get("description", ""),
+                            file_path=issue.get("location", {}).get("filename"),
+                            line_number=issue.get("location", {}).get("start_line"),
+                            resource=issue.get("resource", ""),
+                            remediation=(
+                                issue.get("links", [None])[0]
+                                if issue.get("links")
+                                else None
+                            ),
+                            metadata=issue,
+                        )
+                    )
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse tfsec output: %s", e)
 
@@ -180,12 +201,26 @@ class TerraformScanner(ScannerBase):
         self.logger.info("Running Checkov...")
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("terraform", {}).get("exclude_rules", {}).get("checkov", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("terraform", {})
+            .get("exclude_rules", {})
+            .get("checkov", [])
+        )
         if exclude_rules:
-            self.logger.info("Checkov excluding rules: %s", ', '.join(exclude_rules))
+            self.logger.info("Checkov excluding rules: %s", ", ".join(exclude_rules))
 
         # Build command with path exclusions
-        cmd = ["checkov", "-d", path, "--framework", "terraform", "--output", "json", "--quiet"]
+        cmd = [
+            "checkov",
+            "-d",
+            path,
+            "--framework",
+            "terraform",
+            "--output",
+            "json",
+            "--quiet",
+        ]
 
         # Add excluded paths
         excluded_paths = self.get_excluded_paths()
@@ -210,21 +245,27 @@ class TerraformScanner(ScannerBase):
                     # Try to get severity from check metadata, fallback to intelligent mapping
                     severity = self._map_checkov_severity(check_type)
 
-                    findings.append(Finding(
-                        tool="checkov",
-                        severity=severity,
-                        rule_id=rule_id,
-                        title=check_type.get("check_name", "Policy violation"),
-                        description=check_type.get("check_result", {}).get("result", ""),
-                        file_path=check_type.get("file_path"),
-                        line_number=check_type.get("file_line_range", [None])[0],
-                        resource=check_type.get("resource", ""),
-                        remediation=check_type.get("guideline"),
-                        metadata=check_type
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="checkov",
+                            severity=severity,
+                            rule_id=rule_id,
+                            title=check_type.get("check_name", "Policy violation"),
+                            description=check_type.get("check_result", {}).get(
+                                "result", ""
+                            ),
+                            file_path=check_type.get("file_path"),
+                            line_number=check_type.get("file_line_range", [None])[0],
+                            resource=check_type.get("resource", ""),
+                            remediation=check_type.get("guideline"),
+                            metadata=check_type,
+                        )
+                    )
 
                 if excluded_count > 0:
-                    self.logger.info("Checkov excluded %s findings based on config", excluded_count)
+                    self.logger.info(
+                        "Checkov excluded %s findings based on config", excluded_count
+                    )
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse Checkov output: %s", e)
 
@@ -240,27 +281,48 @@ class TerraformScanner(ScannerBase):
 
         # CRITICAL: Exposed secrets, public access to sensitive resources
         critical_patterns = [
-            "public", "exposed", "secret", "password", "credential",
-            "0.0.0.0/0", "open to internet", "publicly accessible"
+            "public",
+            "exposed",
+            "secret",
+            "password",
+            "credential",
+            "0.0.0.0/0",
+            "open to internet",
+            "publicly accessible",
         ]
 
         # HIGH: Missing encryption, overly permissive policies, security misconfigurations
         high_patterns = [
-            "encryption", "kms", "ssl", "tls", "https",
-            "iam", "policy", "permission", "wildcard",
-            "mfa", "root account", "admin", "imdsv2"
+            "encryption",
+            "kms",
+            "ssl",
+            "tls",
+            "https",
+            "iam",
+            "policy",
+            "permission",
+            "wildcard",
+            "mfa",
+            "root account",
+            "admin",
+            "imdsv2",
         ]
 
         # MEDIUM: Missing logging, monitoring, best practices
         medium_patterns = [
-            "logging", "log", "monitoring", "cloudtrail", "cloudwatch",
-            "versioning", "backup", "retention", "audit"
+            "logging",
+            "log",
+            "monitoring",
+            "cloudtrail",
+            "cloudwatch",
+            "versioning",
+            "backup",
+            "retention",
+            "audit",
         ]
 
         # LOW: Tags, naming, non-critical configurations
-        low_patterns = [
-            "tag", "name", "description", "metadata"
-        ]
+        low_patterns = ["tag", "name", "description", "metadata"]
 
         # Check patterns against check name
         for pattern in critical_patterns:
@@ -304,17 +366,23 @@ class TerraformScanner(ScannerBase):
                 result = json.loads(stdout)
                 for res in result.get("Results", []):
                     for misconf in res.get("Misconfigurations", []):
-                        findings.append(Finding(
-                            tool="trivy",
-                            severity=self.severity_from_string(misconf.get("Severity", "MEDIUM")),
-                            rule_id=misconf.get("ID", "UNKNOWN"),
-                            title=misconf.get("Title", "Misconfiguration detected"),
-                            description=misconf.get("Description", ""),
-                            file_path=res.get("Target"),
-                            resource=misconf.get("CauseMetadata", {}).get("Resource"),
-                            remediation=misconf.get("Resolution"),
-                            metadata=misconf
-                        ))
+                        findings.append(
+                            Finding(
+                                tool="trivy",
+                                severity=self.severity_from_string(
+                                    misconf.get("Severity", "MEDIUM")
+                                ),
+                                rule_id=misconf.get("ID", "UNKNOWN"),
+                                title=misconf.get("Title", "Misconfiguration detected"),
+                                description=misconf.get("Description", ""),
+                                file_path=res.get("Target"),
+                                resource=misconf.get("CauseMetadata", {}).get(
+                                    "Resource"
+                                ),
+                                remediation=misconf.get("Resolution"),
+                                metadata=misconf,
+                            )
+                        )
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse Trivy output: %s", e)
 
@@ -334,16 +402,22 @@ class TerraformScanner(ScannerBase):
                         self.logger.debug("Skipping excluded path: %s", file_path)
                         continue
 
-                    findings.append(Finding(
-                        tool="tflint",
-                        severity=self.severity_from_string(issue.get("rule", {}).get("severity", "warning")),
-                        rule_id=issue.get("rule", {}).get("name", "UNKNOWN"),
-                        title=issue.get("message", "Linting issue"),
-                        description=issue.get("message", ""),
-                        file_path=file_path,
-                        line_number=issue.get("range", {}).get("start", {}).get("line"),
-                        metadata=issue
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="tflint",
+                            severity=self.severity_from_string(
+                                issue.get("rule", {}).get("severity", "warning")
+                            ),
+                            rule_id=issue.get("rule", {}).get("name", "UNKNOWN"),
+                            title=issue.get("message", "Linting issue"),
+                            description=issue.get("message", ""),
+                            file_path=file_path,
+                            line_number=issue.get("range", {})
+                            .get("start", {})
+                            .get("line"),
+                            metadata=issue,
+                        )
+                    )
         except json.JSONDecodeError as e:
             self.logger.error("Failed to parse TFLint output: %s", e)
 

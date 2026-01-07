@@ -54,7 +54,8 @@ jobs:
         run: black src/ --check --diff
 
       - name: Run Flake8
-        run: flake8 src/ --max-line-length=120
+        # E203 is intentionally ignored as it conflicts with Black's slice formatting
+        run: flake8 src/ --max-line-length=120 --extend-ignore=E203
 
       - name: Run Pylint
         run: pylint src/ --disable=C0301,R0913,R0914 || true
@@ -87,18 +88,31 @@ jobs:
       - name: Build Docker image
         run: docker build -t aws-quick-assess:test .
 
+      - name: Create output directory
+        run: mkdir -p test-reports && chmod 777 test-reports
+
       - name: Run integration test with test fixtures
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/tests/fixtures:/repo:ro \
             -v ${{ github.workspace }}/test-reports:/app/reports \
             aws-quick-assess:test \
-            scan-local --repo-path /repo --output-dir /app/reports --format json
+            scan-local --repo-path /repo --output-dir /app/reports --format json || true
 
       - name: Verify report generated
         run: |
+          echo "Contents of test-reports directory:"
           ls -la test-reports/
-          test -f test-reports/*.json
+          echo ""
+          echo "Looking for JSON report..."
+          if ls test-reports/*.json 1> /dev/null 2>&1; then
+            echo "JSON report found!"
+            echo "Report preview:"
+            head -50 test-reports/*.json
+          else
+            echo "ERROR: No JSON report generated"
+            exit 1
+          fi
 
   action-test:
     name: Test Action

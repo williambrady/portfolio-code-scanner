@@ -7,7 +7,7 @@ import os
 import json
 import logging
 from pathlib import Path
-from typing import List, Set, Dict
+from typing import List, Dict
 
 
 class RepoDetector:
@@ -51,13 +51,16 @@ class RepoDetector:
             for file in files:
                 file_lower = file.lower()
                 # Check extensions
-                if file_lower.endswith(('.yaml', '.yml', '.json', '.template')):
+                if file_lower.endswith((".yaml", ".yml", ".json", ".template")):
                     file_path = Path(root) / file
                     # Check if file contains CloudFormation keywords
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
+                        with open(file_path, "r", encoding="utf-8") as f:
                             content = f.read(1000)  # Read first 1000 chars
-                            if 'AWSTemplateFormatVersion' in content or 'AWS::' in content:
+                            if (
+                                "AWSTemplateFormatVersion" in content
+                                or "AWS::" in content
+                            ):
                                 return True
                     except Exception:  # pylint: disable=broad-exception-caught
                         continue
@@ -73,9 +76,12 @@ class RepoDetector:
         package_json = self.repo_path / "package.json"
         if package_json.exists():
             try:
-                with open(package_json, 'r', encoding='utf-8') as f:
+                with open(package_json, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
+                    deps = {
+                        **data.get("dependencies", {}),
+                        **data.get("devDependencies", {}),
+                    }
                     if any("aws-cdk" in dep for dep in deps.keys()):
                         return True
             except Exception:  # pylint: disable=broad-exception-caught
@@ -94,8 +100,8 @@ class RepoDetector:
     def has_typescript(self) -> bool:
         """Check if repository contains TypeScript files"""
         return (
-            self._has_files_with_extension([".ts", ".tsx"]) or
-            (self.repo_path / "tsconfig.json").exists()
+            self._has_files_with_extension([".ts", ".tsx"])
+            or (self.repo_path / "tsconfig.json").exists()
         )
 
     def has_javascript(self) -> bool:
@@ -130,7 +136,7 @@ class RepoDetector:
         # Always run secrets scanner
         scanners.append("secrets")
 
-        self.logger.info("Detected applicable scanners: %s", ', '.join(scanners))
+        self.logger.info("Detected applicable scanners: %s", ", ".join(scanners))
         return scanners
 
     def _has_files_with_extension(self, extensions: List[str]) -> bool:
@@ -161,7 +167,8 @@ class RepoDetector:
             "python": len(list(self.repo_path.rglob("*.py"))),
             "javascript": len(list(self.repo_path.rglob("*.js"))),
             "typescript": len(list(self.repo_path.rglob("*.ts"))),
-            "yaml": len(list(self.repo_path.rglob("*.yaml"))) + len(list(self.repo_path.rglob("*.yml"))),
+            "yaml": len(list(self.repo_path.rglob("*.yaml")))
+            + len(list(self.repo_path.rglob("*.yml"))),
             "json": len(list(self.repo_path.rglob("*.json"))),
         }
         return counts

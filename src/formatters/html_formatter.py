@@ -24,15 +24,15 @@ class HTMLFormatter:
         timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
         output_file = Path(output_path) / f"{timestamp}-scan-report.html"
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(self._generate_html(report_data))
 
         return str(output_file)
 
     def _generate_html(self, report_data: Dict[str, Any]) -> str:
         """Generate HTML content"""
-        summary = report_data.get('summary', {})
-        findings = report_data.get('findings', [])
+        summary = report_data.get("summary", {})
+        findings = report_data.get("findings", [])
 
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -141,7 +141,7 @@ class HTMLFormatter:
         <p>Repository: {escape(report_data.get('repository', 'N/A'))}</p>"""
 
         # Add branch if available
-        if report_data.get('branch'):
+        if report_data.get("branch"):
             html += f"""
         <p>Branch: {escape(report_data.get('branch'))}</p>"""
 
@@ -182,20 +182,20 @@ class HTMLFormatter:
             # Group by severity
             by_sev = {}
             for finding in findings:
-                sev = finding.get('severity', 'INFO')
+                sev = finding.get("severity", "INFO")
                 if sev not in by_sev:
                     by_sev[sev] = []
                 by_sev[sev].append(finding)
 
             # Output by severity
-            for severity in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']:
+            for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]:
                 if severity in by_sev:
                     html += f'<h3 class="section-title">{severity} Severity ({len(by_sev[severity])} findings)</h3>'
                     for finding in by_sev[severity]:
                         location = ""
-                        if finding.get('file_path'):
+                        if finding.get("file_path"):
                             location = f"<code>{escape(finding['file_path'])}"
-                            if finding.get('line_number'):
+                            if finding.get("line_number"):
                                 location += f":{finding['line_number']}"
                             location += "</code>"
 
@@ -212,7 +212,8 @@ class HTMLFormatter:
                 {f" | <strong>Location:</strong> {location}" if location else ""}
             </div>
             <p>{escape(finding.get('description', 'No description available'))}</p>
-            {f"<p><strong>Remediation:</strong> {escape(finding.get('remediation', ''))}</p>" if finding.get('remediation') else ""}
+            {f"<p><strong>Remediation:</strong> {escape(finding.get('remediation', ''))}</p>"
+             if finding.get('remediation') else ""}
         </div>
 """
 

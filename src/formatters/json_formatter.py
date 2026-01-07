@@ -24,7 +24,7 @@ class JSONFormatter:
         timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
         output_file = Path(output_path) / f"{timestamp}-scan-report.json"
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2)
 
         return str(output_file)

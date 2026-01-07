@@ -1,14 +1,20 @@
 # Example workflow showing how to use AWS Quick Assess in your repository
 # Copy this file to your repository's .github/workflows/ directory
+#
+# NOTE: This workflow is disabled by default in this repository since
+# it references the published action (crofton-cloud/aws-quick-assess@v1).
+# The actual CI tests are in ci.yml which uses the local action.
 
 name: Security Scan
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
-  # Allow manual triggering
+  # Disabled - this is an example file for users to copy
+  # The CI workflow (ci.yml) tests the action using the local action (./)
+  # push:
+  #   branches: [main, master]
+  # pull_request:
+  #   branches: [main, master]
+  # Allow manual triggering for testing
   workflow_dispatch:
 
 permissions:

@@ -36,7 +36,9 @@ class ReportAggregator:
         """
         self.findings.extend(findings)
 
-    def aggregate(self, repository_path: str = None, branch: str = None) -> Dict[str, Any]:
+    def aggregate(
+        self, repository_path: str = None, branch: str = None
+    ) -> Dict[str, Any]:
         """
         Aggregate all findings and generate statistics
 
@@ -73,11 +75,15 @@ class ReportAggregator:
             "metadata": {
                 "scanners_run": list(self.stats["by_tool"].keys()),
                 "total_raw_findings": len(self.findings),
-                "deduplication_enabled": self.config.get("aggregation", {}).get("deduplicate", True),
-            }
+                "deduplication_enabled": self.config.get("aggregation", {}).get(
+                    "deduplicate", True
+                ),
+            },
         }
 
-        self.logger.info("Aggregation complete: %s unique findings", len(self.deduplicated_findings))
+        self.logger.info(
+            "Aggregation complete: %s unique findings", len(self.deduplicated_findings)
+        )
         return report
 
     def _deduplicate(self) -> List[Finding]:
@@ -98,9 +104,15 @@ class ReportAggregator:
                 seen_hashes.add(finding_hash)
                 unique_findings.append(finding)
             else:
-                self.logger.debug("Duplicate finding filtered: %s in %s", finding.rule_id, finding.file_path)
+                self.logger.debug(
+                    "Duplicate finding filtered: %s in %s",
+                    finding.rule_id,
+                    finding.file_path,
+                )
 
-        self.logger.info("Deduplication: %s -> %s findings", len(self.findings), len(unique_findings))
+        self.logger.info(
+            "Deduplication: %s -> %s findings", len(self.findings), len(unique_findings)
+        )
         return unique_findings
 
     def _generate_finding_hash(self, finding: Finding) -> str:
@@ -161,7 +173,8 @@ class ReportAggregator:
 
         min_level = severity_order.get(min_severity, 0)
         return [
-            f for f in self.deduplicated_findings
+            f
+            for f in self.deduplicated_findings
             if severity_order.get(f.severity, 0) >= min_level
         ]
 
@@ -173,7 +186,9 @@ class ReportAggregator:
             True if scan should fail
         """
         fail_on = self.config.get("severity", {}).get("fail_on", "HIGH")
-        fail_severity = Severity[fail_on] if fail_on in Severity.__members__ else Severity.HIGH
+        fail_severity = (
+            Severity[fail_on] if fail_on in Severity.__members__ else Severity.HIGH
+        )
 
         critical_findings = self.get_findings_by_severity(fail_severity)
         return len(critical_findings) > 0

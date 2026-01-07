@@ -7,7 +7,6 @@ import os
 import yaml
 import logging
 from typing import Dict, Any, Optional
-from pathlib import Path
 
 
 class ConfigLoader:
@@ -20,7 +19,9 @@ class ConfigLoader:
         Args:
             config_path: Path to config.yaml file
         """
-        self.config_path = config_path or os.getenv("CONFIG_PATH", "/app/config/config.yaml")
+        self.config_path = config_path or os.getenv(
+            "CONFIG_PATH", "/app/config/config.yaml"
+        )
         self.config: Dict[str, Any] = {}
         self.logger = logging.getLogger(__name__)
 
@@ -34,14 +35,18 @@ class ConfigLoader:
         # Load from YAML file
         if os.path.exists(self.config_path):
             try:
-                with open(self.config_path, 'r', encoding='utf-8') as f:
+                with open(self.config_path, "r", encoding="utf-8") as f:
                     self.config = yaml.safe_load(f) or {}
                 self.logger.info("Loaded configuration from %s", self.config_path)
             except Exception as e:  # pylint: disable=broad-exception-caught
-                self.logger.error("Failed to load config from %s: %s", self.config_path, e)
+                self.logger.error(
+                    "Failed to load config from %s: %s", self.config_path, e
+                )
                 self.config = {}
         else:
-            self.logger.warning("Config file not found: %s, using defaults", self.config_path)
+            self.logger.warning(
+                "Config file not found: %s, using defaults", self.config_path
+            )
             self.config = self._get_default_config()
 
         # Override with environment variables

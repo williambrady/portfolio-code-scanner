@@ -46,9 +46,14 @@ class PythonScanner(ScannerBase):
         self.logger.info("Running Bandit...")
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("python", {}).get("exclude_rules", {}).get("bandit", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("python", {})
+            .get("exclude_rules", {})
+            .get("bandit", [])
+        )
         if exclude_rules:
-            self.logger.info("Bandit excluding rules: %s", ', '.join(exclude_rules))
+            self.logger.info("Bandit excluding rules: %s", ", ".join(exclude_rules))
 
         # Build command with path exclusions
         cmd = ["bandit", "-r", path, "-f", "json", "--quiet"]
@@ -81,26 +86,32 @@ class PythonScanner(ScannerBase):
                     # Get file path relative to scan root
                     file_path = result.get("filename", "")
                     if file_path.startswith(path):
-                        file_path = file_path[len(path):].lstrip("/")
+                        file_path = file_path[len(path) :].lstrip("/")
 
-                    findings.append(Finding(
-                        tool="bandit",
-                        severity=severity,
-                        rule_id=rule_id,
-                        title=result.get("issue_text", "Security issue detected"),
-                        description=f"{result.get('issue_text', '')} - {result.get('test_name', '')}",
-                        file_path=file_path,
-                        line_number=result.get("line_number"),
-                        remediation=self._get_bandit_remediation(rule_id),
-                        metadata={
-                            "confidence": result.get("issue_confidence", "UNKNOWN"),
-                            "code": result.get("code", "")[:200],  # Truncate code snippet
-                            "cwe": result.get("cwe", {})
-                        }
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="bandit",
+                            severity=severity,
+                            rule_id=rule_id,
+                            title=result.get("issue_text", "Security issue detected"),
+                            description=f"{result.get('issue_text', '')} - {result.get('test_name', '')}",
+                            file_path=file_path,
+                            line_number=result.get("line_number"),
+                            remediation=self._get_bandit_remediation(rule_id),
+                            metadata={
+                                "confidence": result.get("issue_confidence", "UNKNOWN"),
+                                "code": result.get("code", "")[
+                                    :200
+                                ],  # Truncate code snippet
+                                "cwe": result.get("cwe", {}),
+                            },
+                        )
+                    )
 
                 if excluded_count > 0:
-                    self.logger.info("Bandit excluded %s findings based on config", excluded_count)
+                    self.logger.info(
+                        "Bandit excluded %s findings based on config", excluded_count
+                    )
 
                 self.logger.info("Bandit found %s issues", len(findings))
         except json.JSONDecodeError as e:
@@ -116,9 +127,14 @@ class PythonScanner(ScannerBase):
         self.logger.info("Running Safety...")
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("python", {}).get("exclude_rules", {}).get("safety", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("python", {})
+            .get("exclude_rules", {})
+            .get("safety", [])
+        )
         if exclude_rules:
-            self.logger.info("Safety excluding CVEs: %s", ', '.join(exclude_rules))
+            self.logger.info("Safety excluding CVEs: %s", ", ".join(exclude_rules))
 
         # Look for requirements files
         path_obj = Path(path)
@@ -136,14 +152,24 @@ class PythonScanner(ScannerBase):
             # If it fails, fall back to old 'check' command
             returncode, stdout, stderr = self.execute_command(
                 ["safety", "scan", "--target", str(req_file), "--output", "json"],
-                cwd=path
+                cwd=path,
             )
 
             # Check if Safety requires authentication
-            if returncode != 0 and ("authentication" in stderr.lower() or "api" in stderr.lower() or "EOF when reading" in stderr):
-                self.logger.warning("Safety 3.x requires API key authentication. Skipping dependency vulnerability scanning.")
-                self.logger.warning("To enable Safety scanning: Set SAFETY_API_KEY environment variable or configure in Safety config.")
-                self.logger.warning("Alternatively, downgrade to Safety 2.x: pip install 'safety<3.0'")
+            if returncode != 0 and (
+                "authentication" in stderr.lower()
+                or "api" in stderr.lower()
+                or "EOF when reading" in stderr
+            ):
+                self.logger.warning(
+                    "Safety 3.x requires API key authentication. Skipping dependency vulnerability scanning."
+                )
+                self.logger.warning(
+                    "To enable Safety scanning: Set SAFETY_API_KEY environment variable or configure in Safety config."
+                )
+                self.logger.warning(
+                    "Alternatively, downgrade to Safety 2.x: pip install 'safety<3.0'"
+                )
                 return findings
 
             try:
@@ -158,11 +184,18 @@ class PythonScanner(ScannerBase):
                         vulnerabilities = results
                     elif isinstance(results, dict):
                         # Safety 3.x format
-                        vulnerabilities = results.get("vulnerabilities", results.get("scanned_packages", {}).get("vulnerabilities", []))
+                        vulnerabilities = results.get(
+                            "vulnerabilities",
+                            results.get("scanned_packages", {}).get(
+                                "vulnerabilities", []
+                            ),
+                        )
 
                     for vuln in vulnerabilities:
                         # Different versions of Safety have different field names
-                        cve_id = vuln.get("cve") or vuln.get("vulnerability_id", "UNKNOWN")
+                        cve_id = vuln.get("cve") or vuln.get(
+                            "vulnerability_id", "UNKNOWN"
+                        )
 
                         # Skip excluded CVEs
                         if cve_id in exclude_rules:
@@ -170,38 +203,67 @@ class PythonScanner(ScannerBase):
                             excluded_count += 1
                             continue
 
-                        package = vuln.get("package", vuln.get("package_name", "unknown"))
-                        installed = vuln.get("installed_version", vuln.get("analyzed_version", "unknown"))
-                        affected = vuln.get("affected_versions", vuln.get("vulnerable_spec", "unknown"))
+                        package = vuln.get(
+                            "package", vuln.get("package_name", "unknown")
+                        )
+                        installed = vuln.get(
+                            "installed_version", vuln.get("analyzed_version", "unknown")
+                        )
+                        affected = vuln.get(
+                            "affected_versions", vuln.get("vulnerable_spec", "unknown")
+                        )
 
-                        findings.append(Finding(
-                            tool="safety",
-                            severity=Severity.HIGH,  # All dependency vulnerabilities are HIGH
-                            rule_id=cve_id,
-                            title=f"Vulnerable dependency: {package} {installed}",
-                            description=vuln.get("advisory", vuln.get("description", "Known vulnerability in dependency")),
-                            file_path=str(req_file.name),
-                            remediation=f"Update {package} to a secure version. Vulnerable: {affected}",
-                            metadata={
-                                "package": package,
-                                "installed_version": installed,
-                                "affected_versions": affected,
-                                "cve": cve_id
-                            }
-                        ))
+                        findings.append(
+                            Finding(
+                                tool="safety",
+                                severity=Severity.HIGH,  # All dependency vulnerabilities are HIGH
+                                rule_id=cve_id,
+                                title=f"Vulnerable dependency: {package} {installed}",
+                                description=vuln.get(
+                                    "advisory",
+                                    vuln.get(
+                                        "description",
+                                        "Known vulnerability in dependency",
+                                    ),
+                                ),
+                                file_path=str(req_file.name),
+                                remediation=f"Update {package} to a secure version. Vulnerable: {affected}",
+                                metadata={
+                                    "package": package,
+                                    "installed_version": installed,
+                                    "affected_versions": affected,
+                                    "cve": cve_id,
+                                },
+                            )
+                        )
 
                     if excluded_count > 0:
-                        self.logger.info("Safety excluded %s findings based on config", excluded_count)
+                        self.logger.info(
+                            "Safety excluded %s findings based on config",
+                            excluded_count,
+                        )
 
                     if vulnerabilities:
-                        self.logger.info("Safety found %s vulnerable dependencies in %s", len(findings), req_file.name)
+                        self.logger.info(
+                            "Safety found %s vulnerable dependencies in %s",
+                            len(findings),
+                            req_file.name,
+                        )
                     else:
-                        self.logger.info("Safety found no vulnerabilities in %s", req_file.name)
+                        self.logger.info(
+                            "Safety found no vulnerabilities in %s", req_file.name
+                        )
                 else:
-                    self.logger.debug("Safety produced no output (no vulnerabilities found or authentication required)")
+                    self.logger.debug(
+                        "Safety produced no output (no vulnerabilities found or authentication required)"
+                    )
             except json.JSONDecodeError as e:
-                self.logger.warning("Failed to parse Safety output (likely requires API key): %s", e)
-                self.logger.warning("Safety 3.x requires authentication. Set SAFETY_API_KEY or use Safety 2.x")
+                self.logger.warning(
+                    "Failed to parse Safety output (likely requires API key): %s", e
+                )
+                self.logger.warning(
+                    "Safety 3.x requires authentication. Set SAFETY_API_KEY or use Safety 2.x"
+                )
             except Exception as e:  # pylint: disable=broad-exception-caught
                 self.logger.error("Error running Safety: %s", e)
 
@@ -213,9 +275,14 @@ class PythonScanner(ScannerBase):
         self.logger.info("Running Pylint...")
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("python", {}).get("exclude_rules", {}).get("pylint", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("python", {})
+            .get("exclude_rules", {})
+            .get("pylint", [])
+        )
         if exclude_rules:
-            self.logger.info("Pylint excluding rules: %s", ', '.join(exclude_rules))
+            self.logger.info("Pylint excluding rules: %s", ", ".join(exclude_rules))
 
         # Find all Python files
         path_obj = Path(path)
@@ -262,26 +329,30 @@ class PythonScanner(ScannerBase):
                     # Get file path relative to scan root
                     file_path = result.get("path", "")
                     if file_path.startswith(path):
-                        file_path = file_path[len(path):].lstrip("/")
+                        file_path = file_path[len(path) :].lstrip("/")
 
-                    findings.append(Finding(
-                        tool="pylint",
-                        severity=severity,
-                        rule_id=msg_id,
-                        title=f"{symbol}: {result.get('message', 'Code quality issue')}",
-                        description=result.get("message", ""),
-                        file_path=file_path,
-                        line_number=result.get("line"),
-                        metadata={
-                            "column": result.get("column"),
-                            "symbol": symbol,
-                            "message_type": msg_type,
-                            "module": result.get("module")
-                        }
-                    ))
+                    findings.append(
+                        Finding(
+                            tool="pylint",
+                            severity=severity,
+                            rule_id=msg_id,
+                            title=f"{symbol}: {result.get('message', 'Code quality issue')}",
+                            description=result.get("message", ""),
+                            file_path=file_path,
+                            line_number=result.get("line"),
+                            metadata={
+                                "column": result.get("column"),
+                                "symbol": symbol,
+                                "message_type": msg_type,
+                                "module": result.get("module"),
+                            },
+                        )
+                    )
 
                 if excluded_count > 0:
-                    self.logger.info("Pylint excluded %s findings based on config", excluded_count)
+                    self.logger.info(
+                        "Pylint excluded %s findings based on config", excluded_count
+                    )
 
                 self.logger.info("Pylint found %s issues", len(findings))
             else:
@@ -375,7 +446,9 @@ class PythonScanner(ScannerBase):
             "B702": "Mako templates usage. Use Jinja2 with autoescape enabled.",
             "B703": "Django mark_safe usage. Ensure input is properly sanitized.",
         }
-        return remediations.get(rule_id, "Review the code and follow security best practices.")
+        return remediations.get(
+            rule_id, "Review the code and follow security best practices."
+        )
 
     def parse_output(self, output: str, stderr: str, return_code: int) -> List[Finding]:
         """Parse scanner output"""

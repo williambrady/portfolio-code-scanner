@@ -24,11 +24,11 @@ class NPMScanner(ScannerBase):
 
         # Check for IaC files that Snyk can scan
         has_iac = (
-            any(path_obj.rglob("*.tf")) or  # Terraform
-            any(path_obj.rglob("*.yaml")) or  # CloudFormation/K8s
-            any(path_obj.rglob("*.yml")) or
-            any(path_obj.rglob("*.json")) or
-            any(path_obj.rglob("*.template"))
+            any(path_obj.rglob("*.tf"))  # Terraform
+            or any(path_obj.rglob("*.yaml"))  # CloudFormation/K8s
+            or any(path_obj.rglob("*.yml"))
+            or any(path_obj.rglob("*.json"))
+            or any(path_obj.rglob("*.template"))
         )
 
         return has_npm or has_iac
@@ -38,7 +38,9 @@ class NPMScanner(ScannerBase):
         self.findings = []
 
         if not self.is_applicable(path):
-            self.logger.info("No npm projects or IaC files found, skipping npm scanners")
+            self.logger.info(
+                "No npm projects or IaC files found, skipping npm scanners"
+            )
             return self.findings
 
         self.logger.info("Running npm/Snyk scanners...")
@@ -67,7 +69,9 @@ class NPMScanner(ScannerBase):
             self.logger.info("No package.json files found for npm audit")
             return findings
 
-        self.logger.info("Running npm audit on %s package.json files", len(package_files))
+        self.logger.info(
+            "Running npm audit on %s package.json files", len(package_files)
+        )
 
         for package_file in package_files:
             package_dir = package_file.parent
@@ -79,8 +83,7 @@ class NPMScanner(ScannerBase):
 
             # Run npm audit with JSON output
             _, stdout, _ = self.execute_command(
-                ["npm", "audit", "--json"],
-                cwd=str(package_dir)
+                ["npm", "audit", "--json"], cwd=str(package_dir)
             )
 
             try:
@@ -91,22 +94,42 @@ class NPMScanner(ScannerBase):
                     for vuln_name, vuln_data in vulnerabilities.items():
                         severity = vuln_data.get("severity", "low")
 
-                        findings.append(Finding(
-                            tool="npm-audit",
-                            severity=self.severity_from_string(severity),
-                            rule_id=f"npm-{vuln_name}",
-                            title=f"Vulnerable dependency: {vuln_name}",
-                            description=vuln_data.get("via", [{}])[0].get("title", "Dependency vulnerability") if isinstance(vuln_data.get("via"), list) else str(vuln_data.get("via", "")),
-                            file_path=str(package_file),
-                            remediation=f"Update to version {vuln_data.get('fixAvailable', {}).get('version', 'latest')}" if vuln_data.get('fixAvailable') else "Review and update dependency",
-                            metadata=vuln_data
-                        ))
+                        findings.append(
+                            Finding(
+                                tool="npm-audit",
+                                severity=self.severity_from_string(severity),
+                                rule_id=f"npm-{vuln_name}",
+                                title=f"Vulnerable dependency: {vuln_name}",
+                                description=(
+                                    vuln_data.get("via", [{}])[0].get(
+                                        "title", "Dependency vulnerability"
+                                    )
+                                    if isinstance(vuln_data.get("via"), list)
+                                    else str(vuln_data.get("via", ""))
+                                ),
+                                file_path=str(package_file),
+                                remediation=(
+                                    f"Update to version {vuln_data.get('fixAvailable', {}).get('version', 'latest')}"
+                                    if vuln_data.get("fixAvailable")
+                                    else "Review and update dependency"
+                                ),
+                                metadata=vuln_data,
+                            )
+                        )
 
-                    self.logger.info("npm audit found %s vulnerabilities in %s", len(vulnerabilities), package_file)
+                    self.logger.info(
+                        "npm audit found %s vulnerabilities in %s",
+                        len(vulnerabilities),
+                        package_file,
+                    )
             except json.JSONDecodeError as e:
-                self.logger.error("Failed to parse npm audit output for %s: %s", package_file, e)
+                self.logger.error(
+                    "Failed to parse npm audit output for %s: %s", package_file, e
+                )
             except Exception as e:  # pylint: disable=broad-exception-caught
-                self.logger.error("Error processing npm audit results for %s: %s", package_file, e)
+                self.logger.error(
+                    "Error processing npm audit results for %s: %s", package_file, e
+                )
 
         return findings
 
@@ -116,12 +139,19 @@ class NPMScanner(ScannerBase):
         self.logger.info("Running Snyk IaC...")
 
         # Get Snyk token from environment variable
-        snyk_token_env = self.config.get("tool_config", {}).get("snyk", {}).get("auth_token_env", "SNYK_AUTH")
+        snyk_token_env = (
+            self.config.get("tool_config", {})
+            .get("snyk", {})
+            .get("auth_token_env", "SNYK_AUTH")
+        )
         snyk_token = os.environ.get(snyk_token_env)
         snyk_org = self.config.get("tool_config", {}).get("snyk", {}).get("org")
 
         if not snyk_token:
-            self.logger.warning("Snyk auth token not found in environment variable '%s', skipping Snyk IaC scan", snyk_token_env)
+            self.logger.warning(
+                "Snyk auth token not found in environment variable '%s', skipping Snyk IaC scan",
+                snyk_token_env,
+            )
             return findings
 
         # Set environment variable for Snyk authentication
@@ -129,14 +159,23 @@ class NPMScanner(ScannerBase):
         env["SNYK_TOKEN"] = snyk_token
 
         # Get exclusions from config
-        exclude_rules = self.config.get("tools", {}).get("npm", {}).get("exclude_rules", {}).get("snyk", [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get("npm", {})
+            .get("exclude_rules", {})
+            .get("snyk", [])
+        )
         if exclude_rules:
-            self.logger.info("Snyk excluding rules: %s", ', '.join(exclude_rules))
+            self.logger.info("Snyk excluding rules: %s", ", ".join(exclude_rules))
 
         excluded_count = 0
 
         # Scan .template files separately (Snyk doesn't recognize them natively)
-        findings.extend(self._scan_template_files(path, snyk_token, snyk_org, exclude_rules, excluded_count, env))
+        findings.extend(
+            self._scan_template_files(
+                path, snyk_token, snyk_org, exclude_rules, excluded_count, env
+            )
+        )
 
         # Build Snyk command - use "." as path since we set cwd
         cmd = ["snyk", "iac", "test", ".", "--json"]
@@ -145,13 +184,19 @@ class NPMScanner(ScannerBase):
             cmd.extend(["--org", snyk_org])
 
         # Get severity threshold from config
-        severity_threshold = self.config.get("tool_config", {}).get("snyk", {}).get("severity_threshold", "low")
+        severity_threshold = (
+            self.config.get("tool_config", {})
+            .get("snyk", {})
+            .get("severity_threshold", "low")
+        )
         cmd.append(f"--severity-threshold={severity_threshold}")
 
         self.logger.info("Running Snyk IaC test on %s", path)
 
         # Run Snyk IaC test - set cwd to path so Snyk scans from that directory
-        returncode, stdout, stderr = self.execute_command(cmd, cwd=path, timeout=600, env=env)
+        returncode, stdout, stderr = self.execute_command(
+            cmd, cwd=path, timeout=600, env=env
+        )
 
         # Log raw output for debugging
         self.logger.debug("Snyk return code: %s", returncode)
@@ -165,7 +210,9 @@ class NPMScanner(ScannerBase):
         try:
             # Snyk returns exit code 1 when vulnerabilities are found, which is expected
             if not stdout:
-                self.logger.warning("Snyk returned no output. Return code: %s", returncode)
+                self.logger.warning(
+                    "Snyk returned no output. Return code: %s", returncode
+                )
                 if stderr:
                     self.logger.warning("Snyk stderr: %s", stderr[:500])
                 return findings
@@ -177,16 +224,26 @@ class NPMScanner(ScannerBase):
                 if isinstance(result, list):
                     # Multiple files scanned
                     for file_result in result:
-                        findings.extend(self._parse_snyk_file_result(file_result, exclude_rules, excluded_count))
+                        findings.extend(
+                            self._parse_snyk_file_result(
+                                file_result, exclude_rules, excluded_count
+                            )
+                        )
                 elif isinstance(result, dict):
                     # Single result or error
                     if result.get("infrastructureAsCodeIssues"):
-                        findings.extend(self._parse_snyk_file_result(result, exclude_rules, excluded_count))
+                        findings.extend(
+                            self._parse_snyk_file_result(
+                                result, exclude_rules, excluded_count
+                            )
+                        )
                     elif result.get("error"):
-                        self.logger.warning("Snyk error: %s", result.get('error'))
+                        self.logger.warning("Snyk error: %s", result.get("error"))
 
                 if excluded_count > 0:
-                    self.logger.info("Snyk excluded %s findings based on config", excluded_count)
+                    self.logger.info(
+                        "Snyk excluded %s findings based on config", excluded_count
+                    )
                 self.logger.info("Snyk IaC found %s findings", len(findings))
 
         except json.JSONDecodeError as e:
@@ -198,8 +255,15 @@ class NPMScanner(ScannerBase):
 
         return findings
 
-    def _scan_template_files(self, path: str, snyk_token: str, snyk_org: str,
-                            exclude_rules: list, excluded_count: int, env: dict) -> List[Finding]:
+    def _scan_template_files(
+        self,
+        path: str,
+        snyk_token: str,
+        snyk_org: str,
+        exclude_rules: list,
+        excluded_count: int,
+        env: dict,
+    ) -> List[Finding]:
         """
         Scan .template files with Snyk by creating temporary .yaml copies
         Workaround for Snyk not recognizing .template extension
@@ -215,13 +279,17 @@ class NPMScanner(ScannerBase):
             return findings
 
         # Filter out excluded paths
-        template_files = [f for f in template_files if not self.is_path_excluded(str(f))]
+        template_files = [
+            f for f in template_files if not self.is_path_excluded(str(f))
+        ]
 
         if not template_files:
             self.logger.debug("All .template files were excluded")
             return findings
 
-        self.logger.info("Found %s .template files to scan with Snyk", len(template_files))
+        self.logger.info(
+            "Found %s .template files to scan with Snyk", len(template_files)
+        )
 
         # Create temporary directory for .template file copies with .yaml extension
         # Use tempfile module for security (instead of hardcoded /tmp)
@@ -234,7 +302,7 @@ class NPMScanner(ScannerBase):
                 # Create unique temp filename preserving directory structure
                 relative_path = template_file.relative_to(path_obj)
                 # Preserve path structure but change extension to .yaml
-                temp_file = temp_path / str(relative_path).replace('.template', '.yaml')
+                temp_file = temp_path / str(relative_path).replace(".template", ".yaml")
                 temp_file.parent.mkdir(parents=True, exist_ok=True)
 
                 # Copy file
@@ -244,7 +312,9 @@ class NPMScanner(ScannerBase):
                 original_file_path = str(template_file.relative_to(path_obj))
                 file_mapping[temp_file_name] = original_file_path
                 file_mapping[str(temp_file)] = str(template_file)
-                self.logger.debug("Copied %s to %s for Snyk scanning", template_file, temp_file)
+                self.logger.debug(
+                    "Copied %s to %s for Snyk scanning", template_file, temp_file
+                )
 
             # Build Snyk command
             cmd = ["snyk", "iac", "test", ".", "--json"]
@@ -253,24 +323,39 @@ class NPMScanner(ScannerBase):
                 cmd.extend(["--org", snyk_org])
 
             # Get severity threshold from config
-            severity_threshold = self.config.get("tool_config", {}).get("snyk", {}).get("severity_threshold", "low")
+            severity_threshold = (
+                self.config.get("tool_config", {})
+                .get("snyk", {})
+                .get("severity_threshold", "low")
+            )
             cmd.append(f"--severity-threshold={severity_threshold}")
 
-            self.logger.info("Running Snyk IaC on %s .template files", len(template_files))
+            self.logger.info(
+                "Running Snyk IaC on %s .template files", len(template_files)
+            )
 
             # Run Snyk on temp directory
-            returncode, stdout, stderr = self.execute_command(cmd, cwd=str(temp_path), timeout=600, env=env)
+            returncode, stdout, stderr = self.execute_command(
+                cmd, cwd=str(temp_path), timeout=600, env=env
+            )
 
             # Log debug info
             self.logger.debug("Snyk .template scan return code: %s", returncode)
             if stdout:
-                self.logger.debug("Snyk .template stdout (first 500 chars): %s", stdout[:500])
+                self.logger.debug(
+                    "Snyk .template stdout (first 500 chars): %s", stdout[:500]
+                )
             if stderr:
-                self.logger.debug("Snyk .template stderr (first 500 chars): %s", stderr[:500])
+                self.logger.debug(
+                    "Snyk .template stderr (first 500 chars): %s", stderr[:500]
+                )
 
             try:
                 if not stdout:
-                    self.logger.warning("Snyk returned no output for .template files. Return code: %s", returncode)
+                    self.logger.warning(
+                        "Snyk returned no output for .template files. Return code: %s",
+                        returncode,
+                    )
                     return findings
 
                 result = json.loads(stdout)
@@ -283,26 +368,52 @@ class NPMScanner(ScannerBase):
                         # Try direct lookup first, then try as relative path
                         if temp_file_path in file_mapping:
                             file_result["targetFile"] = file_mapping[temp_file_path]
-                            self.logger.debug("Mapped %s to %s", temp_file_path, file_mapping[temp_file_path])
+                            self.logger.debug(
+                                "Mapped %s to %s",
+                                temp_file_path,
+                                file_mapping[temp_file_path],
+                            )
                         else:
-                            self.logger.debug("Could not map file path: %s (available: %s)", temp_file_path, list(file_mapping.keys())[:3])
+                            self.logger.debug(
+                                "Could not map file path: %s (available: %s)",
+                                temp_file_path,
+                                list(file_mapping.keys())[:3],
+                            )
 
-                        findings.extend(self._parse_snyk_file_result(file_result, exclude_rules, excluded_count))
+                        findings.extend(
+                            self._parse_snyk_file_result(
+                                file_result, exclude_rules, excluded_count
+                            )
+                        )
                 elif isinstance(result, dict):
                     if result.get("infrastructureAsCodeIssues"):
                         # Map temp file path back to original
                         temp_file_path = result.get("targetFile", "")
                         if temp_file_path in file_mapping:
                             result["targetFile"] = file_mapping[temp_file_path]
-                            self.logger.debug("Mapped %s to %s", temp_file_path, file_mapping[temp_file_path])
+                            self.logger.debug(
+                                "Mapped %s to %s",
+                                temp_file_path,
+                                file_mapping[temp_file_path],
+                            )
                         else:
-                            self.logger.debug("Could not map file path: %s", temp_file_path)
+                            self.logger.debug(
+                                "Could not map file path: %s", temp_file_path
+                            )
 
-                        findings.extend(self._parse_snyk_file_result(result, exclude_rules, excluded_count))
+                        findings.extend(
+                            self._parse_snyk_file_result(
+                                result, exclude_rules, excluded_count
+                            )
+                        )
                     elif result.get("error"):
-                        self.logger.warning("Snyk .template scan error: %s", result.get('error'))
+                        self.logger.warning(
+                            "Snyk .template scan error: %s", result.get("error")
+                        )
 
-                self.logger.info("Snyk found %s findings in .template files", len(findings))
+                self.logger.info(
+                    "Snyk found %s findings in .template files", len(findings)
+                )
 
             except json.JSONDecodeError as e:
                 self.logger.error("Failed to parse Snyk .template output: %s", e)
@@ -312,7 +423,9 @@ class NPMScanner(ScannerBase):
 
         return findings
 
-    def _parse_snyk_file_result(self, file_result: dict, exclude_rules: list, excluded_count: int) -> List[Finding]:
+    def _parse_snyk_file_result(
+        self, file_result: dict, exclude_rules: list, excluded_count: int
+    ) -> List[Finding]:
         """Parse Snyk results for a single file"""
         findings = []
 
@@ -343,22 +456,24 @@ class NPMScanner(ScannerBase):
             if impact:
                 description = f"{description} Impact: {impact}"
 
-            findings.append(Finding(
-                tool="snyk-iac",
-                severity=severity,
-                rule_id=rule_id,
-                title=issue.get("title", "IaC security issue"),
-                description=description,
-                file_path=target_file,
-                line_number=line_number,
-                resource=issue.get("subType", ""),
-                remediation=issue.get("resolve", ""),
-                metadata={
-                    "publicId": issue.get("publicId"),
-                    "documentation": issue.get("documentation"),
-                    "references": issue.get("references", [])
-                }
-            ))
+            findings.append(
+                Finding(
+                    tool="snyk-iac",
+                    severity=severity,
+                    rule_id=rule_id,
+                    title=issue.get("title", "IaC security issue"),
+                    description=description,
+                    file_path=target_file,
+                    line_number=line_number,
+                    resource=issue.get("subType", ""),
+                    remediation=issue.get("resolve", ""),
+                    metadata={
+                        "publicId": issue.get("publicId"),
+                        "documentation": issue.get("documentation"),
+                        "references": issue.get("references", []),
+                    },
+                )
+            )
 
         return findings
 

@@ -13,6 +13,7 @@ from enum import Enum
 
 class Severity(Enum):
     """Finding severity levels"""
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -23,6 +24,7 @@ class Severity(Enum):
 @dataclass
 class Finding:
     """Represents a security finding from a scanner"""
+
     tool: str
     severity: Severity
     rule_id: str
@@ -46,7 +48,7 @@ class Finding:
             "line_number": self.line_number,
             "resource": self.resource,
             "remediation": self.remediation,
-            "metadata": self.metadata or {}
+            "metadata": self.metadata or {},
         }
 
 
@@ -96,7 +98,7 @@ class ScannerBase(ABC):
         command: List[str],
         cwd: Optional[str] = None,
         timeout: int = 600,
-        env: Optional[Dict[str, str]] = None
+        env: Optional[Dict[str, str]] = None,
     ) -> tuple[int, str, str]:
         """
         Execute a command and return results
@@ -111,18 +113,20 @@ class ScannerBase(ABC):
             Tuple of (return_code, stdout, stderr)
         """
         try:
-            self.logger.debug("Executing: %s", ' '.join(command))
+            self.logger.debug("Executing: %s", " ".join(command))
             result = subprocess.run(
                 command,
                 cwd=cwd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                env=env
+                env=env,
             )
             return result.returncode, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
-            self.logger.error("Command timed out after %ss: %s", timeout, ' '.join(command))
+            self.logger.error(
+                "Command timed out after %ss: %s", timeout, " ".join(command)
+            )
             return -1, "", "Command timed out"
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error("Command execution failed: %s", e)
@@ -146,7 +150,7 @@ class ScannerBase(ABC):
             return False
 
         # Normalize the file path
-        normalized_path = str(Path(file_path)).replace('\\', '/')
+        normalized_path = str(Path(file_path)).replace("\\", "/")
 
         for exclude_pattern in excluded_paths:
             exclude_pattern = exclude_pattern.strip()
@@ -156,8 +160,8 @@ class ScannerBase(ABC):
                 return True
 
             # Handle wildcard patterns like **/fixtures
-            if '**' in exclude_pattern:
-                pattern_part = exclude_pattern.replace('**/', '').replace('**', '')
+            if "**" in exclude_pattern:
+                pattern_part = exclude_pattern.replace("**/", "").replace("**", "")
                 if pattern_part in normalized_path:
                     return True
 
@@ -196,7 +200,9 @@ class ScannerBase(ABC):
         }
         return severity_map.get(severity_str.lower(), Severity.INFO)
 
-    def filter_excluded_findings(self, findings: List[Finding], tool_name: str, scanner_type: str) -> List[Finding]:
+    def filter_excluded_findings(
+        self, findings: List[Finding], tool_name: str, scanner_type: str
+    ) -> List[Finding]:
         """
         Filter findings based on exclusion rules from config
 
@@ -208,12 +214,17 @@ class ScannerBase(ABC):
         Returns:
             Filtered list of findings with exclusions removed
         """
-        exclude_rules = self.config.get("tools", {}).get(scanner_type, {}).get("exclude_rules", {}).get(tool_name, [])
+        exclude_rules = (
+            self.config.get("tools", {})
+            .get(scanner_type, {})
+            .get("exclude_rules", {})
+            .get(tool_name, [])
+        )
 
         if not exclude_rules:
             return findings
 
-        self.logger.info("%s excluding rules: %s", tool_name, ', '.join(exclude_rules))
+        self.logger.info("%s excluding rules: %s", tool_name, ", ".join(exclude_rules))
 
         filtered_findings = []
         excluded_count = 0
@@ -226,6 +237,8 @@ class ScannerBase(ABC):
             filtered_findings.append(finding)
 
         if excluded_count > 0:
-            self.logger.info("%s excluded %s findings based on config", tool_name, excluded_count)
+            self.logger.info(
+                "%s excluded %s findings based on config", tool_name, excluded_count
+            )
 
         return filtered_findings

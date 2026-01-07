@@ -54,7 +54,7 @@ class SARIFFormatter:
 
         sarif_output = self._build_sarif(report_data)
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(sarif_output, f, indent=2)
 
         return str(output_file)
@@ -76,7 +76,9 @@ class SARIFFormatter:
             "runs": runs,
         }
 
-    def _group_by_tool(self, findings: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+    def _group_by_tool(
+        self, findings: List[Dict[str, Any]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Group findings by their source tool"""
         tools: Dict[str, List[Dict[str, Any]]] = {}
         for finding in findings:
@@ -90,7 +92,7 @@ class SARIFFormatter:
         self,
         tool_name: str,
         findings: List[Dict[str, Any]],
-        report_data: Dict[str, Any]
+        report_data: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Build a SARIF run object for a specific tool"""
         # Build rules from findings
@@ -204,7 +206,9 @@ class SARIFFormatter:
             result["locations"] = [location]
 
         # Add fingerprint for deduplication
-        fingerprint = finding.get("fingerprint") or finding.get("metadata", {}).get("hash")
+        fingerprint = finding.get("fingerprint") or finding.get("metadata", {}).get(
+            "hash"
+        )
         if fingerprint:
             result["fingerprints"] = {
                 "primaryLocationLineHash": fingerprint,
@@ -231,7 +235,7 @@ class SARIFFormatter:
         prefixes = ["/repo/", "/github/workspace/", "./"]
         for prefix in prefixes:
             if path.startswith(prefix):
-                path = path[len(prefix):]
+                path = path[len(prefix) :]
         # Remove leading slash
         return path.lstrip("/")
 

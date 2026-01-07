@@ -31,8 +31,8 @@ def setup_logging(verbose: bool = False):
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
 
@@ -58,16 +58,16 @@ def get_repository_name(repo_path: str) -> str:
             cwd=repo_path,
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout:
             # Extract repo name from URL
             # Examples: https://github.com/user/repo.git -> repo
             #           git@github.com:user/repo.git -> repo
             url = result.stdout.strip()
-            repo_name = url.rstrip('/').split('/')[-1]
+            repo_name = url.rstrip("/").split("/")[-1]
             # Remove .git suffix if present
-            if repo_name.endswith('.git'):
+            if repo_name.endswith(".git"):
                 repo_name = repo_name[:-4]
             if repo_name:
                 return repo_name
@@ -91,7 +91,7 @@ def get_git_branch(repo_path: str) -> Optional[str]:
             cwd=repo_path,
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout:
             return result.stdout.strip()
@@ -108,9 +108,7 @@ def get_git_branch(repo_path: str) -> Optional[str]:
     default="/app/config/config.yaml",
     help="Path to configuration file",
 )
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output"
-)
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx, config: str, verbose: bool):
     """AWS Quick Assess - Security scanning tool for AWS Infrastructure-as-Code"""
@@ -199,10 +197,12 @@ def scan_local(ctx, repo_path: str, output_dir: str, format: tuple):
         repo_name = get_repository_name(repo_path)
         # Get git branch if available
         branch_name = get_git_branch(repo_path)
-        report_data = aggregator.aggregate(repository_path=repo_name, branch=branch_name)
+        report_data = aggregator.aggregate(
+            repository_path=repo_name, branch=branch_name
+        )
 
         # Display summary
-        summary = report_data.get('summary', {})
+        summary = report_data.get("summary", {})
         click.echo("")
         click.echo("=" * 60)
         click.echo("SCAN SUMMARY")
@@ -211,10 +211,10 @@ def scan_local(ctx, repo_path: str, output_dir: str, format: tuple):
         click.echo(f"Files Analyzed: {summary.get('unique_files', 0)}")
         click.echo("")
 
-        by_severity = summary.get('by_severity', {})
+        by_severity = summary.get("by_severity", {})
         if by_severity:
             click.echo("By Severity:")
-            for sev in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']:
+            for sev in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]:
                 count = by_severity.get(sev, 0)
                 if count > 0:
                     click.echo(f"  {sev}: {count}")
@@ -223,10 +223,10 @@ def scan_local(ctx, repo_path: str, output_dir: str, format: tuple):
         # Generate reports
         click.echo("Generating reports...")
         formatters = {
-            'json': JSONFormatter(),
-            'html': HTMLFormatter(),
-            'markdown': MarkdownFormatter(),
-            'sarif': SARIFFormatter(),
+            "json": JSONFormatter(),
+            "html": HTMLFormatter(),
+            "markdown": MarkdownFormatter(),
+            "sarif": SARIFFormatter(),
         }
 
         for fmt in format:
