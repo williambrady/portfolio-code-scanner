@@ -94,6 +94,11 @@ if [[ "$VERBOSE" == "true" ]]; then
     CLI_ARGS="--verbose $CLI_ARGS"
 fi
 
+# Add fail-on-severity flag
+if [[ -n "$FAIL_ON_SEVERITY" ]]; then
+    CLI_ARGS="$CLI_ARGS --fail-on-severity $FAIL_ON_SEVERITY"
+fi
+
 # Set Snyk token if provided
 if [[ -n "$SNYK_TOKEN" ]]; then
     export SNYK_AUTH="$SNYK_TOKEN"

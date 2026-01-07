@@ -136,8 +136,16 @@ def cli(ctx, config: str, verbose: bool):
     default=["json"],
     help="Report format(s): json, html, markdown, csv, sarif",
 )
+@click.option(
+    "--fail-on-severity",
+    type=click.Choice(["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "NONE"]),
+    default=None,
+    help="Fail if findings at this severity or above (NONE to never fail)",
+)
 @click.pass_context
-def scan_local(ctx, repo_path: str, output_dir: str, format: tuple):
+def scan_local(
+    ctx, repo_path: str, output_dir: str, format: tuple, fail_on_severity: str
+):
     """Scan local repository for IaC security issues"""
     setup_logging(ctx.obj.get("verbose", False))
     logger = logging.getLogger(__name__)
@@ -154,6 +162,12 @@ def scan_local(ctx, repo_path: str, output_dir: str, format: tuple):
         # Load configuration
         config_loader = ConfigLoader(ctx.obj["config"])
         config = config_loader.load()
+
+        # Override fail_on_severity if specified on command line
+        if fail_on_severity is not None:
+            if "severity" not in config:
+                config["severity"] = {}
+            config["severity"]["fail_on"] = fail_on_severity
 
         # Create output directory
         Path(output_dir).mkdir(parents=True, exist_ok=True)

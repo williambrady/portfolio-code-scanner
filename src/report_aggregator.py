@@ -186,6 +186,11 @@ class ReportAggregator:
             True if scan should fail
         """
         fail_on = self.config.get("severity", {}).get("fail_on", "HIGH")
+
+        # NONE means never fail on findings
+        if fail_on == "NONE":
+            return False
+
         fail_severity = (
             Severity[fail_on] if fail_on in Severity.__members__ else Severity.HIGH
         )
