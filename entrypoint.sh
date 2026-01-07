@@ -19,6 +19,9 @@ VERBOSE="${INPUT_VERBOSE:-false}"
 GITHUB_WORKSPACE="${GITHUB_WORKSPACE:-/github/workspace}"
 REPORT_DIR="${GITHUB_WORKSPACE}/.aws-quick-assess-reports"
 
+# Create report directory
+mkdir -p "$REPORT_DIR"
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -70,9 +73,6 @@ echo "Output Formats: $OUTPUT_FORMATS"
 echo "Fail On Severity: $FAIL_ON_SEVERITY"
 echo "Report Directory: $REPORT_DIR"
 echo ""
-
-# Create report directory
-mkdir -p "$REPORT_DIR"
 
 # Build CLI arguments
 CLI_ARGS="scan-local --repo-path $FULL_SCAN_PATH --output-dir $REPORT_DIR"

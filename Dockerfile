@@ -158,14 +158,6 @@ COPY entrypoint.sh ./entrypoint.sh
 RUN mkdir -p /app/reports /app/logs /repo && \
     chmod +x /app/entrypoint.sh
 
-# ========================================
-# Security: Create non-root user
-# ========================================
-# Create scanner user with UID 1000 (standard non-root UID)
-RUN groupadd -r scanner -g 1000 && \
-    useradd -r -g scanner -u 1000 -m -s /bin/bash scanner && \
-    chown -R scanner:scanner /app /repo
-
 # Set up volumes
 VOLUME ["/repo", "/app/reports", "/app/logs"]
 
@@ -174,8 +166,9 @@ ENV PYTHONPATH=/app \
     CONFIG_PATH=/app/config/config.yaml \
     LOG_LEVEL=INFO
 
-# Switch to non-root user for running the scanner
-USER scanner
+# Note: Running as root for GitHub Actions compatibility
+# The workspace volume permissions require root access to write reports
+# For local usage with enhanced security, use: docker run --user 1000:1000 ...
 
 # Default command
 ENTRYPOINT ["python", "-m", "src.main"]
