@@ -150,7 +150,6 @@ finally:
 ## Future Enhancements
 - npm/Node.js dependency scanning
 - CDK scanning implementation
-- AWS live scanning with Prowler
 - SARIF output format
 - Custom policy definitions
 

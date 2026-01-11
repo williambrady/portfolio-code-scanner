@@ -21,14 +21,6 @@ repository:
     - "test"
     - "**/fixtures"
 
-# AWS Configuration
-aws:
-  default_region: "us-east-1"
-  regions_to_scan:
-    - "us-east-1"
-  # Set to true to scan all regions (overrides regions_to_scan)
-  scan_all_regions: false
-
 # Severity Thresholds
 severity:
   # Levels: CRITICAL, HIGH, MEDIUM, LOW, INFO
@@ -57,10 +49,6 @@ tools:
     checkov: true
     tfsec: true
     trivy: true
-    terrascan: false  # Optional
-    kics: false  # Optional
-    regula: false  # Optional
-    conftest: false  # Optional
     # Rule exclusions/exceptions
     exclude_rules:
       tflint:
@@ -113,23 +101,11 @@ tools:
         - "R0914"  # too-many-locals
         - "R0917 " # too-many-positional-arguments
 
-  # CDK Scanners
-  cdk:
-    enabled: true
-    cdk_synth: true
-    cdk_nag: true
-    # Language-specific linters (auto-detected)
-    eslint: true  # TypeScript/JavaScript
-    pylint: true  # Python
-    checkstyle: false  # Java
-    stylecop: false  # .NET
-
   # npm/Node.js Scanners
   npm:
     enabled: true
     npm_audit: true
     snyk: true
-    owasp_dependency_check: false  # Optional
     # Rule exclusions/exceptions
     exclude_rules:
       snyk: []  # Example: ["SNYK-CC-TF-1", "SNYK-CC-K8S-2"]
@@ -139,20 +115,10 @@ tools:
   secrets:
     enabled: true
     gitleaks: true
-    trufflehog: false  # Optional
     # Rule exclusions/exceptions
     exclude_rules:
-      gitleaks: []  # Example: ["generic-api-key", "aws-access-token"]
-    git_secrets: false  # Optional
-
-  # AWS Live Scanning
-  aws_live:
-    enabled: true
-    security_hub: true
-    config: true
-    trusted_advisor: false  # Requires Business/Enterprise support
-    prowler: true
-    scoutsuite: false  # Optional
+      gitleaks:
+        - "generic-api-key"  # High false positive rate
 
 # Tool-Specific Configuration
 tool_config:
@@ -187,11 +153,6 @@ tool_config:
     config_path: null
     verbose: false
     redact: true
-
-  prowler:
-    services: []  # Empty = all services
-    severity: "critical,high,medium,low"
-    compliance: []  # e.g., ["cis_1.5_aws", "hipaa"]
 
   snyk:
     severity_threshold: "low"

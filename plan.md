@@ -3,9 +3,9 @@
 This document defines a recommended, layered scanning standard for Infrastructure-as-Code (IaC) and supporting application code used to deploy AWS infrastructure.
 It covers Terraform, CloudFormation, CDK, and npm-based tooling.
 
-This project should create a python utility to be executed against a locally cloned repository and a live AWS account. Recommendations for CI/CD pipelines should be considered as options for a scanning tool as well.
+This project should create a python utility to be executed against a locally cloned repository. Recommendations for CI/CD pipelines should be considered as options for a scanning tool as well.
 
-The end result is to report on all scan findings from local and AWS security tools.
+The end result is to report on all scan findings from local security tools.
 
 Configuration options should be in config.yaml.
 
@@ -16,7 +16,6 @@ The docker container should be built from a Dockerfile that is specified in conf
 The docker container should be run locally for now.
 Credentials for any systems should be passed in as environment variables.
 For code scans, the docker container should be run against a locally cloned repository.
-For AWS scans, the docker container should be run against a live AWS account.
 
 ---
 
@@ -192,7 +191,6 @@ All repositories should adopt a multi-layer scanning model:
 - **Artifact signing** (cosign)
 - **Pre-commit hooks** to shift-left scanning
 - **Central policy repository** for OPA, cfn-guard, or Checkov custom rules
-- **Security Hub integration** where supported
 
 ---
 

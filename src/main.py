@@ -134,7 +134,7 @@ def cli(ctx, config: str, verbose: bool):
     "--format",
     multiple=True,
     default=["json"],
-    help="Report format(s): json, html, markdown, csv, sarif",
+    help="Report format(s): json, html, markdown, sarif",
 )
 @click.option(
     "--fail-on-severity",
@@ -267,52 +267,6 @@ def scan_local(
 
 
 @cli.command()
-@click.option(
-    "--output-dir",
-    type=click.Path(),
-    default="/app/reports",
-    help="Output directory for reports",
-)
-@click.option(
-    "--regions",
-    multiple=True,
-    help="AWS regions to scan (default: from config)",
-)
-@click.pass_context
-def scan_aws(ctx, output_dir: str, regions: tuple):
-    """Scan live AWS account for security issues"""
-    click.echo("Scanning AWS account...")
-    click.echo(f"Config: {ctx.obj['config']}")
-    click.echo(f"Output: {output_dir}")
-    if regions:
-        click.echo(f"Regions: {', '.join(regions)}")
-    click.echo("\nThis is a placeholder. Full implementation coming soon.")
-
-
-@cli.command()
-@click.option(
-    "--repo-path",
-    type=click.Path(exists=True),
-    default="/repo",
-    help="Path to repository to scan",
-)
-@click.option(
-    "--output-dir",
-    type=click.Path(),
-    default="/app/reports",
-    help="Output directory for reports",
-)
-@click.pass_context
-def scan_all(ctx, repo_path: str, output_dir: str):
-    """Scan both local repository and AWS account"""
-    click.echo("Running full scan (local + AWS)...")
-    click.echo(f"Repository: {repo_path}")
-    click.echo(f"Config: {ctx.obj['config']}")
-    click.echo(f"Output: {output_dir}")
-    click.echo("\nThis is a placeholder. Full implementation coming soon.")
-
-
-@cli.command()
 @click.pass_context
 def list_tools(ctx):
     """List all available scanning tools and their status"""
@@ -323,26 +277,19 @@ def list_tools(ctx):
     click.echo("  - Checkov")
     click.echo("  - tfsec")
     click.echo("  - Trivy")
-    click.echo("  - Terrascan")
     click.echo("\nCloudFormation:")
     click.echo("  - cfn-lint")
     click.echo("  - cfn-nag")
     click.echo("  - Checkov")
-    click.echo("\nCDK:")
-    click.echo("  - cdk-nag")
-    click.echo("  - Language linters (ESLint, pylint)")
     click.echo("\nnpm/Node.js:")
     click.echo("  - npm audit")
     click.echo("  - Snyk")
     click.echo("\nPython:")
     click.echo("  - Bandit (code security)")
     click.echo("  - Safety (dependency vulnerabilities)")
+    click.echo("  - Pylint (code quality)")
     click.echo("\nSecrets Detection:")
     click.echo("  - Gitleaks")
-    click.echo("\nAWS Live:")
-    click.echo("  - AWS Security Hub")
-    click.echo("  - AWS Config")
-    click.echo("  - Prowler")
 
 
 @cli.command()

@@ -1,19 +1,19 @@
-# AWS Quick Assess
+# SDLC Code Scanner
 
-> Comprehensive security assessment tool for AWS Infrastructure-as-Code and live environments
+> Comprehensive security assessment tool for AWS Infrastructure-as-Code
 
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-available-2088FF?logo=github-actions&logoColor=white)](https://github.com/marketplace/actions/aws-quick-assess)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-AWS Quick Assess is a Docker-based security scanning platform that orchestrates multiple industry-leading security tools to provide comprehensive analysis of your AWS infrastructure code and live AWS accounts. It implements a multi-layered security scanning approach covering linting, security policies, dependency vulnerabilities, and secrets detection.
+SDLC Code Scanner is a Docker-based security scanning platform that orchestrates multiple industry-leading security tools to provide comprehensive analysis of your AWS infrastructure code. It implements a multi-layered security scanning approach covering linting, security policies, dependency vulnerabilities, and secrets detection.
 
 **Available as a GitHub Action for seamless CI/CD integration!**
 
 ## Features
 
 ### Multi-Tool Orchestration
-- **17+ Security Tools** integrated in a single container
-- **Automated Detection** of IaC frameworks (Terraform, CloudFormation, CDK, npm, Python)
+- **10+ Security Tools** integrated in a single container
+- **Automated Detection** of IaC frameworks (Terraform, CloudFormation, npm, Python)
 - **Parallel Execution** for faster scan times
 - **Finding Deduplication** across multiple tools
 - **Rule Exclusions** for customizable scanning policies
@@ -27,7 +27,6 @@ AWS Quick Assess is a Docker-based security scanning platform that orchestrates 
 - `tfsec` - Security scanning for AWS, Azure, GCP resources
 - `Checkov` - Policy-as-code and compliance scanning
 - `Trivy` - Vulnerability and misconfiguration detection
-- `Terrascan` - Policy-based scanning (optional)
 
 #### CloudFormation Scanning
 - `cfn-lint` - Template validation and best practices
@@ -37,26 +36,26 @@ AWS Quick Assess is a Docker-based security scanning platform that orchestrates 
 #### Python Scanning
 - `Bandit` - Python code security analysis (SQL injection, weak crypto, etc.)
 - `Safety` - Dependency vulnerability detection (CVE scanning)
+- `Pylint` - Code quality and error detection
 
 #### Additional Scanning
 - `Gitleaks` - Secrets and credentials detection
 - `npm audit` - JavaScript/TypeScript dependency vulnerabilities
 - `Snyk` - Advanced dependency and license scanning
-- `Prowler` - Live AWS account security assessment (planned)
 
 ### Reporting
 
 - **JSON** - Structured data for CI/CD integration
 - **HTML** - Interactive dashboard with color-coded severity levels
 - **Markdown** - Documentation-ready format
-- **SARIF** - GitHub Code Scanning integration
+- **SARIF** - GitHub Code Scanning integration (CodeQL compatible)
 - **Severity-based Exit Codes** - Fail builds on critical/high findings
 
 ## Quick Start
 
 ### GitHub Action (Recommended)
 
-The easiest way to use AWS Quick Assess is as a GitHub Action:
+The easiest way to use SDLC Code Scanner is as a GitHub Action:
 
 ```yaml
 name: Security Scan
@@ -69,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run AWS Quick Assess
+      - name: Run SDLC Code Scanner
         uses: crofton-cloud/aws-quick-assess@v1
         with:
           scan-path: '.'
@@ -81,7 +80,6 @@ See [GitHub Action Usage](#github-action) for full documentation.
 ### Prerequisites
 
 - Docker installed and running (for local usage)
-- For AWS scanning: AWS credentials with appropriate permissions
 
 ### Build the Docker Image
 
@@ -137,44 +135,13 @@ docker run --rm \
 ./scripts/run-local-scan.sh /path/to/repo [output-dir] [config-file]
 ```
 
-### Scan AWS Account
-
-Scan your live AWS environment (coming soon):
-
-```bash
-export AWS_ACCESS_KEY_ID=your_access_key
-export AWS_SECRET_ACCESS_KEY=your_secret_key
-export AWS_REGION=us-east-1
-
-docker run --rm \
-  -e AWS_ACCESS_KEY_ID \
-  -e AWS_SECRET_ACCESS_KEY \
-  -e AWS_REGION \
-  -v $(pwd)/reports:/app/reports \
-  aws-quick-assess:latest \
-  scan-aws --output-dir /app/reports
-```
-
-**Helper Script:**
-```bash
-./scripts/run-aws-scan.sh [output-dir] [config-file]
-```
-
-### Full Scan (Local + AWS)
-
-Scan both repository and AWS account:
-
-```bash
-./scripts/run-full-scan.sh /path/to/repo [output-dir] [config-file]
-```
-
 ### List Available Tools
 
 ```bash
 docker run --rm aws-quick-assess:latest list-tools
 ```
 
-### Validate Configuration
+### Validate Configuration (Planned)
 
 ```bash
 docker run --rm \
@@ -182,6 +149,8 @@ docker run --rm \
   aws-quick-assess:latest \
   validate-config
 ```
+
+> Note: Full validation is planned for a future release.
 
 ## Configuration
 
@@ -198,7 +167,6 @@ tools:
     tfsec: true
     checkov: true
     trivy: true
-    terrascan: false  # Optional tools can be disabled
 
   cloudformation:
     enabled: true
@@ -210,6 +178,12 @@ tools:
     enabled: true
     bandit: true   # Python code security
     safety: true   # Dependency vulnerabilities
+    pylint: true   # Code quality
+
+  npm:
+    enabled: true
+    npm_audit: true
+    snyk: true
 
   secrets:
     enabled: true
@@ -286,13 +260,6 @@ execution:
 
 ## Environment Variables
 
-### Required for AWS Scanning
-- `AWS_ACCESS_KEY_ID` - AWS access key
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key
-- `AWS_REGION` - AWS region (default: us-east-1)
-- `AWS_SESSION_TOKEN` - For temporary credentials (optional)
-
-### Optional
 - `CONFIG_PATH` - Path to config.yaml (default: /app/config/config.yaml)
 - `LOG_LEVEL` - Logging verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 - `REPO_PATH` - Repository path override
@@ -342,7 +309,7 @@ Documentation-ready format with:
 
 ## GitHub Action
 
-AWS Quick Assess is available as a GitHub Action for seamless CI/CD integration with GitHub Code Scanning support.
+SDLC Code Scanner is available as a GitHub Action for seamless CI/CD integration with GitHub Code Scanning support.
 
 ### Basic Usage
 
@@ -361,7 +328,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run AWS Quick Assess
+      - name: Run SDLC Code Scanner
         uses: crofton-cloud/aws-quick-assess@v1
         with:
           scan-path: '.'
@@ -374,7 +341,7 @@ jobs:
 |-------|-------------|---------|
 | `scan-path` | Path to scan (relative to repository root) | `.` |
 | `config-path` | Path to custom config.yaml file | `''` |
-| `output-formats` | Comma-separated formats (json,html,markdown,sarif) | `json,sarif` |
+| `output-formats` | Comma-separated formats: json, html, markdown, sarif | `json,sarif` |
 | `fail-on-severity` | Fail if findings at this level or above (CRITICAL,HIGH,MEDIUM,LOW,INFO,NONE) | `HIGH` |
 | `snyk-token` | Snyk API token for enhanced scanning | `''` |
 | `upload-sarif` | Upload SARIF results to GitHub Code Scanning | `true` |
@@ -414,7 +381,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run AWS Quick Assess
+      - name: Run SDLC Code Scanner
         id: scan
         uses: crofton-cloud/aws-quick-assess@v1
         with:
@@ -501,7 +468,7 @@ repos:
   - repo: local
     hooks:
       - id: aws-quick-assess
-        name: AWS Quick Assess
+        name: SDLC Code Scanner
         entry: ./scripts/run-local-scan.sh
         language: script
         pass_filenames: false
@@ -547,7 +514,7 @@ repos:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    AWS Quick Assess                          │
+│                    SDLC Code Scanner                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌──────────────┐      ┌─────────────────────────┐          │
@@ -612,9 +579,7 @@ aws-quick-assess/
 │       ├── markdown_formatter.py
 │       └── sarif_formatter.py   # GitHub Code Scanning format
 ├── scripts/
-│   ├── run-local-scan.sh        # Helper script for local scans
-│   ├── run-aws-scan.sh          # Helper script for AWS scans
-│   └── run-full-scan.sh         # Helper script for full scans
+│   └── run-local-scan.sh        # Helper script for local scans
 ├── tests/
 │   └── fixtures/                # Test data
 ├── action.yml                   # GitHub Action definition
@@ -689,21 +654,20 @@ pytest --cov=src --cov-report=html
 
 ## Roadmap
 
-- [x] Terraform scanning
-- [x] CloudFormation scanning
-- [x] Python scanning (Bandit, Safety)
-- [x] Secrets detection
-- [x] Multi-format reporting
+- [x] Terraform scanning (fmt, validate, TFLint, tfsec, Checkov, Trivy)
+- [x] CloudFormation scanning (cfn-lint, cfn-nag, Checkov)
+- [x] Python scanning (Bandit, Safety, Pylint)
+- [x] npm/Node.js scanning (npm audit, Snyk)
+- [x] Secrets detection (Gitleaks)
+- [x] Multi-format reporting (JSON, HTML, Markdown, SARIF)
 - [x] Rule exclusions
 - [x] Path exclusions
 - [x] GitHub Action
 - [x] SARIF output format (GitHub Code Scanning)
-- [ ] AWS live scanning (Prowler integration)
 - [ ] CDK scanning
-- [ ] npm/Node.js dependency scanning
+- [ ] Config validation command
 - [ ] Custom policy definitions
 - [ ] Baseline/suppression files
-- [ ] Trend analysis and historical tracking
 
 ## Contributing
 
@@ -722,19 +686,13 @@ This project is licensed under the terms specified in [LICENSE](LICENSE).
 ## Acknowledgments
 
 This tool integrates and orchestrates the following open-source security tools:
-- [Terraform](https://www.terraform.io/)
-- [TFLint](https://github.com/terraform-linters/tflint)
-- [tfsec](https://github.com/aquasecurity/tfsec)
-- [Trivy](https://github.com/aquasecurity/trivy)
-- [Checkov](https://github.com/bridgecrewio/checkov)
-- [cfn-lint](https://github.com/aws-cloudformation/cfn-lint)
-- [cfn-nag](https://github.com/stelligent/cfn_nag)
-- [Bandit](https://github.com/PyCQA/bandit)
-- [Safety](https://github.com/pyupio/safety)
-- [Gitleaks](https://github.com/gitleaks/gitleaks)
-- [Prowler](https://github.com/prowler-cloud/prowler)
-- [Snyk](https://snyk.io/)
 
----
+**Terraform:** [Terraform](https://www.terraform.io/), [TFLint](https://github.com/terraform-linters/tflint), [tfsec](https://github.com/aquasecurity/tfsec), [Trivy](https://github.com/aquasecurity/trivy), [Checkov](https://github.com/bridgecrewio/checkov)
 
-**Built with ❤️ by Crofton Cloud**
+**CloudFormation:** [cfn-lint](https://github.com/aws-cloudformation/cfn-lint), [cfn-nag](https://github.com/stelligent/cfn_nag), [Checkov](https://github.com/bridgecrewio/checkov)
+
+**Python:** [Bandit](https://github.com/PyCQA/bandit), [Safety](https://github.com/pyupio/safety), [Pylint](https://github.com/pylint-dev/pylint)
+
+**npm/Node.js:** [npm audit](https://docs.npmjs.com/cli/audit), [Snyk](https://snyk.io/)
+
+**Secrets:** [Gitleaks](https://github.com/gitleaks/gitleaks)

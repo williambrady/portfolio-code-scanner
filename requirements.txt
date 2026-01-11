@@ -3,13 +3,8 @@ pyyaml>=6.0
 python-dotenv>=1.0.0
 click>=8.1.0
 
-# AWS SDK
-boto3>=1.28.0
-botocore>=1.31.0
-
 # IaC Security Scanners (Python-based)
 checkov>=2.4.0
-prowler>=3.0.0
 
 # CloudFormation Tools
 cfn-lint>=0.80.0
