@@ -39,7 +39,7 @@ class HTMLFormatter:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS Quick Assess - Scan Report</title>
+    <title>SDLC Code Scanner - Scan Report</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -137,7 +137,7 @@ class HTMLFormatter:
 </head>
 <body>
     <div class="header">
-        <h1>AWS Quick Assess - Security Scan Report</h1>
+        <h1>SDLC Code Scanner - Security Scan Report</h1>
         <p>Repository: {escape(report_data.get('repository', 'N/A'))}</p>"""
 
         # Add branch if available

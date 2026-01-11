@@ -112,8 +112,8 @@ class SARIFFormatter:
         return {
             "tool": {
                 "driver": {
-                    "name": f"AWS Quick Assess ({tool_name})",
-                    "informationUri": "https://github.com/crofton-cloud/aws-quick-assess",
+                    "name": f"SDLC Code Scanner ({tool_name})",
+                    "informationUri": "https://github.com/crofton-cloud/sdlc-code-scanner",
                     "version": "1.0.0",
                     "rules": list(rules.values()),
                 }

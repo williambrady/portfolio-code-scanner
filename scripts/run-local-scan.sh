@@ -1,5 +1,5 @@
 #!/bin/bash
-# AWS Quick Assess - Local Repository Scan
+# SDLC Code Scanner - Local Repository Scan
 # Usage: ./scripts/run-local-scan.sh /path/to/repo
 
 set -e
@@ -8,7 +8,7 @@ REPO_PATH="${1:-.}"
 OUTPUT_DIR="${2:-./reports}"
 CONFIG_FILE="${3:-./config/config.yaml}"
 
-echo "AWS Quick Assess - Local Repository Scan"
+echo "SDLC Code Scanner - Local Repository Scan"
 echo "========================================"
 echo "Repository: $REPO_PATH"
 echo "Output: $OUTPUT_DIR"
@@ -39,7 +39,7 @@ docker run --rm \
   -v "$(realpath "$REPO_PATH"):/repo:ro" \
   -v "$(realpath "$OUTPUT_DIR"):/app/reports" \
   -v "$(realpath "$CONFIG_FILE"):/app/config/config.yaml:ro" \
-  aws-quick-assess:latest \
+  sdlc-code-scanner:latest \
   scan-local \
   --repo-path /repo \
   --output-dir /app/reports \

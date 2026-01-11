@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AWS Quick Assess is a Python-based security assessment utility for AWS infrastructure-as-code (IaC). It orchestrates multiple security scanning tools in a Docker container to provide comprehensive security analysis of Terraform, CloudFormation, Python, and npm-based projects.
+SDLC Code Scanner is a Python-based security assessment utility for AWS infrastructure-as-code (IaC). It orchestrates multiple security scanning tools in a Docker container to provide comprehensive security analysis of Terraform, CloudFormation, Python, and npm-based projects.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ AWS Quick Assess is a Python-based security assessment utility for AWS infrastru
 
 Build the Docker image:
 ```bash
-docker build -t aws-quick-assess .
+docker build -t sdlc-code-scanner .
 ```
 
 Run local repository scan:

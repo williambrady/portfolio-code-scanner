@@ -1,8 +1,8 @@
-# Example workflow showing how to use AWS Quick Assess in your repository
+# Example workflow showing how to use SDLC Code Scanner in your repository
 # Copy this file to your repository's .github/workflows/ directory
 #
 # NOTE: This workflow is disabled by default in this repository since
-# it references the published action (crofton-cloud/aws-quick-assess@v1).
+# it references the published action (crofton-cloud/sdlc-code-scanner@v1).
 # The actual CI tests are in ci.yml which uses the local action.
 
 name: Security Scan
@@ -23,16 +23,16 @@ permissions:
 
 jobs:
   security-scan:
-    name: AWS Quick Assess Security Scan
+    name: SDLC Code Scanner Security Scan
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run AWS Quick Assess
+      - name: Run SDLC Code Scanner
         id: security-scan
-        uses: crofton-cloud/aws-quick-assess@v1
+        uses: crofton-cloud/sdlc-code-scanner@v1
         with:
           # Scan the entire repository (default)
           scan-path: '.'
@@ -54,14 +54,14 @@ jobs:
         if: always() && steps.security-scan.outputs.sarif-path != ''
         with:
           sarif_file: ${{ steps.security-scan.outputs.sarif-path }}
-          category: 'aws-quick-assess'
+          category: 'sdlc-code-scanner'
 
       - name: Upload scan reports as artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-scan-reports
-          path: .aws-quick-assess-reports/
+          path: .sdlc-code-scanner-reports/
           retention-days: 30
 
       - name: Post scan summary comment on PR
@@ -78,7 +78,7 @@ jobs:
 
             const statusEmoji = status === 'passed' ? ':white_check_mark:' : ':x:';
 
-            const body = `## AWS Quick Assess Security Scan ${statusEmoji}
+            const body = `## SDLC Code Scanner Security Scan ${statusEmoji}
 
             | Severity | Count |
             |----------|-------|

@@ -87,7 +87,7 @@
 - Proper resource cleanup (temp files)
 
 ### Testing
-- Self-scan of aws-quick-assess codebase: **0 findings** (100% clean)
+- Self-scan of sdlc-code-scanner codebase: **0 findings** (100% clean)
 - All 10 initial findings remediated or properly excluded
 - Test directories excluded from production scans
 

@@ -2,7 +2,7 @@
 
 > Comprehensive security assessment tool for AWS Infrastructure-as-Code
 
-[![GitHub Action](https://img.shields.io/badge/GitHub%20Action-available-2088FF?logo=github-actions&logoColor=white)](https://github.com/marketplace/actions/aws-quick-assess)
+[![GitHub Action](https://img.shields.io/badge/GitHub%20Action-available-2088FF?logo=github-actions&logoColor=white)](https://github.com/marketplace/actions/sdlc-code-scanner)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 SDLC Code Scanner is a Docker-based security scanning platform that orchestrates multiple industry-leading security tools to provide comprehensive analysis of your AWS infrastructure code. It implements a multi-layered security scanning approach covering linting, security policies, dependency vulnerabilities, and secrets detection.
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run SDLC Code Scanner
-        uses: crofton-cloud/aws-quick-assess@v1
+        uses: crofton-cloud/sdlc-code-scanner@v1
         with:
           scan-path: '.'
           fail-on-severity: 'HIGH'
@@ -84,13 +84,13 @@ See [GitHub Action Usage](#github-action) for full documentation.
 ### Build the Docker Image
 
 ```bash
-docker build -t aws-quick-assess:latest .
+docker build -t sdlc-code-scanner:latest .
 ```
 
 Or use the pre-built image (if available):
 
 ```bash
-docker pull croftoncloud/aws-quick-assess:latest
+docker pull croftoncloud/sdlc-code-scanner:latest
 ```
 
 ### Basic Usage
@@ -101,7 +101,7 @@ Scan a local repository:
 docker run --rm \
   -v /path/to/your/repo:/repo:ro \
   -v $(pwd)/reports:/app/reports \
-  aws-quick-assess:latest \
+  sdlc-code-scanner:latest \
   scan-local --repo-path /repo
 ```
 
@@ -121,7 +121,7 @@ Scan your IaC code for security issues:
 docker run --rm \
   -v /path/to/repo:/repo:ro \
   -v $(pwd)/reports:/app/reports \
-  aws-quick-assess:latest \
+  sdlc-code-scanner:latest \
   scan-local \
     --repo-path /repo \
     --output-dir /app/reports \
@@ -138,7 +138,7 @@ docker run --rm \
 ### List Available Tools
 
 ```bash
-docker run --rm aws-quick-assess:latest list-tools
+docker run --rm sdlc-code-scanner:latest list-tools
 ```
 
 ### Validate Configuration (Planned)
@@ -146,7 +146,7 @@ docker run --rm aws-quick-assess:latest list-tools
 ```bash
 docker run --rm \
   -v $(pwd)/config:/app/config:ro \
-  aws-quick-assess:latest \
+  sdlc-code-scanner:latest \
   validate-config
 ```
 
@@ -329,7 +329,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run SDLC Code Scanner
-        uses: crofton-cloud/aws-quick-assess@v1
+        uses: crofton-cloud/sdlc-code-scanner@v1
         with:
           scan-path: '.'
           fail-on-severity: 'HIGH'
@@ -383,7 +383,7 @@ jobs:
 
       - name: Run SDLC Code Scanner
         id: scan
-        uses: crofton-cloud/aws-quick-assess@v1
+        uses: crofton-cloud/sdlc-code-scanner@v1
         with:
           scan-path: '.'
           output-formats: 'json,html,sarif'
@@ -401,7 +401,7 @@ jobs:
         if: always()
         with:
           name: security-reports
-          path: .aws-quick-assess-reports/
+          path: .sdlc-code-scanner-reports/
           retention-days: 30
 
       - name: Check scan results
@@ -415,7 +415,7 @@ jobs:
 
 ```yaml
 - name: Scan only infrastructure directory
-  uses: crofton-cloud/aws-quick-assess@v1
+  uses: crofton-cloud/sdlc-code-scanner@v1
   with:
     scan-path: 'infrastructure/terraform'
     fail-on-severity: 'MEDIUM'
@@ -425,16 +425,16 @@ jobs:
 
 ```yaml
 - name: Scan with custom config
-  uses: crofton-cloud/aws-quick-assess@v1
+  uses: crofton-cloud/sdlc-code-scanner@v1
   with:
-    config-path: '.github/aws-quick-assess-config.yaml'
+    config-path: '.github/sdlc-code-scanner-config.yaml'
 ```
 
 ### Don't Fail on Findings
 
 ```yaml
 - name: Scan without failing
-  uses: crofton-cloud/aws-quick-assess@v1
+  uses: crofton-cloud/sdlc-code-scanner@v1
   with:
     fail-on-severity: 'NONE'
 ```
@@ -452,7 +452,7 @@ security-scan:
     - docker run --rm
         -v $CI_PROJECT_DIR:/repo:ro
         -v $CI_PROJECT_DIR/reports:/app/reports
-        aws-quick-assess:latest
+        sdlc-code-scanner:latest
         scan-local --repo-path /repo --format json
   artifacts:
     paths:
@@ -467,7 +467,7 @@ security-scan:
 repos:
   - repo: local
     hooks:
-      - id: aws-quick-assess
+      - id: sdlc-code-scanner
         name: SDLC Code Scanner
         entry: ./scripts/run-local-scan.sh
         language: script
@@ -555,7 +555,7 @@ repos:
 ## File Structure
 
 ```
-aws-quick-assess/
+sdlc-code-scanner/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml               # CI workflow for this repo
@@ -679,7 +679,7 @@ This project is licensed under the terms specified in [LICENSE](LICENSE).
 
 ## Support
 
-- **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/croftoncloud/aws-quick-assess/issues)
+- **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/croftoncloud/sdlc-code-scanner/issues)
 - **Documentation**: See [docs/](docs/) for detailed guides
 - **CLAUDE.md**: For development with Claude Code
 

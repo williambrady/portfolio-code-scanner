@@ -33,7 +33,7 @@ class MarkdownFormatter:
         md = []
 
         # Header
-        md.append("# AWS Quick Assess - Security Scan Report\n")
+        md.append("# SDLC Code Scanner - Security Scan Report\n")
         md.append(f"**Repository:** {report_data.get('repository', 'N/A')}\n")
         # Add branch if available
         if report_data.get("branch"):
