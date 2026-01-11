@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AWS Quick Assess - Main Entry Point
+SDLC Code Scanner - Main Entry Point
 Orchestrates security scanning for AWS IaC and live environments
 """
 
@@ -111,7 +111,7 @@ def get_git_branch(repo_path: str) -> Optional[str]:
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx, config: str, verbose: bool):
-    """AWS Quick Assess - Security scanning tool for AWS Infrastructure-as-Code"""
+    """SDLC Code Scanner - Security scanning tool for AWS Infrastructure-as-Code"""
     ctx.ensure_object(dict)
     ctx.obj["config"] = config
     ctx.obj["verbose"] = verbose
@@ -151,7 +151,7 @@ def scan_local(
     logger = logging.getLogger(__name__)
 
     click.echo("=" * 60)
-    click.echo("AWS Quick Assess - Local Repository Scan")
+    click.echo("SDLC Code Scanner - Local Repository Scan")
     click.echo("=" * 60)
     click.echo(f"Repository: {repo_path}")
     click.echo(f"Output: {output_dir}")

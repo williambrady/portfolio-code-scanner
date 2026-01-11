@@ -1,6 +1,6 @@
-# AWS Quick Assess - Build Steps
+# SDLC Code Scanner - Build Steps
 
-This document enumerates all steps required to build the AWS Quick Assess system as defined in `plan.md`.
+This document enumerates all steps required to build the SDLC Code Scanner system as defined in `plan.md`.
 
 ---
 

@@ -1,11 +1,11 @@
-# AWS Quick Assess - Multi-stage Dockerfile
+# SDLC Code Scanner - Multi-stage Dockerfile
 # Installs all IaC security scanning tools in a single container
 # Compatible with GitHub Actions
 
 FROM python:3.11-slim as base
 
 # GitHub Actions labels
-LABEL org.opencontainers.image.source="https://github.com/crofton-cloud/aws-quick-assess"
+LABEL org.opencontainers.image.source="https://github.com/crofton-cloud/sdlc-code-scanner"
 LABEL org.opencontainers.image.description="Security scanner for AWS Infrastructure-as-Code"
 LABEL org.opencontainers.image.licenses="MIT"
 
