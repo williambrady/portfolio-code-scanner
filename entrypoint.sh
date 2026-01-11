@@ -19,8 +19,22 @@ VERBOSE="${INPUT_VERBOSE:-false}"
 GITHUB_WORKSPACE="${GITHUB_WORKSPACE:-/github/workspace}"
 REPORT_DIR="${GITHUB_WORKSPACE}/.aws-quick-assess-reports"
 
-# Create report directory
-mkdir -p "$REPORT_DIR"
+# Create report directory with permission handling
+# GitHub Actions workspace may have restrictive permissions
+if ! mkdir -p "$REPORT_DIR" 2>/dev/null; then
+    echo "::warning::Cannot create report directory in workspace, attempting to fix permissions..."
+    # Try to take ownership of workspace (works when running as root)
+    if chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE" 2>/dev/null; then
+        mkdir -p "$REPORT_DIR"
+    else
+        # Fall back to /tmp if workspace is not writable
+        echo "::warning::Using /tmp for reports due to workspace permission issues"
+        REPORT_DIR="/tmp/.aws-quick-assess-reports"
+        mkdir -p "$REPORT_DIR"
+        # Copy reports to workspace at the end if possible
+        FALLBACK_REPORT_DIR="true"
+    fi
+fi
 
 # =============================================================================
 # Helper Functions
@@ -282,5 +296,22 @@ echo "=============================================="
 echo "Total Findings: $TOTAL"
 echo "Exit Code: $EXIT_CODE"
 echo ""
+
+# If we used fallback report directory, try to copy reports to workspace
+if [[ "${FALLBACK_REPORT_DIR:-}" == "true" ]]; then
+    WORKSPACE_REPORT_DIR="${GITHUB_WORKSPACE}/.aws-quick-assess-reports"
+    if mkdir -p "$WORKSPACE_REPORT_DIR" 2>/dev/null; then
+        cp -r "$REPORT_DIR"/* "$WORKSPACE_REPORT_DIR"/ 2>/dev/null || true
+        echo "Reports copied to workspace: $WORKSPACE_REPORT_DIR"
+        # Update output to point to workspace location
+        set_output "report-path" "$WORKSPACE_REPORT_DIR"
+        SARIF_IN_WORKSPACE=$(find "$WORKSPACE_REPORT_DIR" -name "*.sarif" -type f | head -1)
+        if [[ -f "$SARIF_IN_WORKSPACE" ]]; then
+            set_output "sarif-path" "$SARIF_IN_WORKSPACE"
+        fi
+    else
+        echo "::warning::Could not copy reports to workspace, reports available at: $REPORT_DIR"
+    fi
+fi
 
 exit $EXIT_CODE
