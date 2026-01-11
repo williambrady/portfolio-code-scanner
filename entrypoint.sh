@@ -195,10 +195,15 @@ set_output "critical-count" "$CRITICAL"
 set_output "high-count" "$HIGH"
 set_output "medium-count" "$MEDIUM"
 set_output "low-count" "$LOW"
-set_output "report-path" "$REPORT_DIR"
+
+# Output relative paths for use in subsequent workflow steps
+# Docker container uses /github/workspace but host uses different path
+RELATIVE_REPORT_DIR="${REPORT_DIR#$GITHUB_WORKSPACE/}"
+set_output "report-path" "$RELATIVE_REPORT_DIR"
 
 if [[ -f "$SARIF_REPORT" ]]; then
-    set_output "sarif-path" "$SARIF_REPORT"
+    RELATIVE_SARIF="${SARIF_REPORT#$GITHUB_WORKSPACE/}"
+    set_output "sarif-path" "$RELATIVE_SARIF"
 fi
 
 # Determine scan status
@@ -313,11 +318,12 @@ if [[ "${FALLBACK_REPORT_DIR:-}" == "true" ]]; then
             COPIED_FILES=$(find "$WORKSPACE_REPORT_DIR" -type f 2>/dev/null | wc -l)
             if [[ "$COPIED_FILES" -gt 0 ]]; then
                 echo "Reports copied to workspace: $WORKSPACE_REPORT_DIR ($COPIED_FILES files)"
-                # Update output to point to workspace location
-                set_output "report-path" "$WORKSPACE_REPORT_DIR"
+                # Update output to point to workspace location (relative path)
+                set_output "report-path" ".sdlc-code-scanner-reports"
                 SARIF_IN_WORKSPACE=$(find "$WORKSPACE_REPORT_DIR" -name "*.sarif" -type f | head -1)
                 if [[ -f "$SARIF_IN_WORKSPACE" ]]; then
-                    set_output "sarif-path" "$SARIF_IN_WORKSPACE"
+                    RELATIVE_SARIF="${SARIF_IN_WORKSPACE#$GITHUB_WORKSPACE/}"
+                    set_output "sarif-path" "$RELATIVE_SARIF"
                 fi
             else
                 echo "::warning::Copy appeared to succeed but no files found in workspace, reports available at: $REPORT_DIR"
