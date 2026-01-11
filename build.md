@@ -77,14 +77,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
 - [ ] Install and configure TruffleHog (optional)
 - [ ] Install and configure git-secrets (optional)
 
-### 2.6 AWS Live Scanning Tools
-- [ ] Install and configure AWS CLI
-- [ ] Install and configure AWS Security Hub SDK/API access
-- [ ] Install and configure AWS Config SDK/API access
-- [ ] Install and configure AWS Trusted Advisor SDK/API access (if available)
-- [ ] Install and configure Prowler (AWS security assessment)
-- [ ] Install and configure ScoutSuite (optional)
-
 ---
 
 ## Phase 3: Core Python Application Development
@@ -136,17 +128,7 @@ This document enumerates all steps required to build the AWS Quick Assess system
   - [ ] TruffleHog integration (optional)
   - [ ] Output parser
 
-### 3.5 AWS Live Scanner Implementation
-- [ ] Create `aws_scanner.py`:
-  - [ ] AWS credential validation
-  - [ ] Security Hub findings retrieval
-  - [ ] AWS Config compliance retrieval
-  - [ ] Trusted Advisor checks retrieval
-  - [ ] Prowler integration
-  - [ ] ScoutSuite integration (optional)
-  - [ ] Output parser for each service
-
-### 3.6 Repository Detection Module
+### 3.5 Repository Detection Module
 - [ ] Create `repo_detector.py`:
   - [ ] Detect Terraform files (.tf)
   - [ ] Detect CloudFormation files (.yaml, .json, .template)
@@ -198,8 +180,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
   - [ ] Argument parser setup
   - [ ] Commands:
     - [ ] `scan-local` - Scan local repository
-    - [ ] `scan-aws` - Scan live AWS account
-    - [ ] `scan-all` - Scan both local and AWS
     - [ ] `list-tools` - List available scanning tools
     - [ ] `validate-config` - Validate config.yaml
   - [ ] Options:
@@ -249,7 +229,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
 - [ ] Create `tests/test_cdk_scanner.py`
 - [ ] Create `tests/test_npm_scanner.py`
 - [ ] Create `tests/test_secrets_scanner.py`
-- [ ] Create `tests/test_aws_scanner.py`
 - [ ] Create `tests/test_report_aggregator.py`
 - [ ] Create `tests/test_formatters.py`
 - [ ] Create `tests/test_cli.py`
@@ -260,7 +239,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
 - [ ] Create `tests/integration/test_cdk_workflow.py`
 - [ ] Create `tests/integration/test_npm_workflow.py`
 - [ ] Create `tests/integration/test_full_scan.py`
-- [ ] Create `tests/integration/test_aws_scan.py`
 
 ### 6.3 Test Fixtures
 - [ ] Create `tests/fixtures/terraform/` with sample .tf files
@@ -293,12 +271,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
   - [ ] Mount output directory
   - [ ] Pass environment variables
   - [ ] Run scan-local command
-- [ ] Create `scripts/run-aws-scan.sh`:
-  - [ ] Pass AWS credentials as env vars
-  - [ ] Mount output directory
-  - [ ] Run scan-aws command
-- [ ] Create `scripts/run-full-scan.sh`:
-  - [ ] Combine local and AWS scanning
 - [ ] Create Windows equivalents (.bat or .ps1)
 
 ### 7.3 Docker Compose (Optional)
@@ -331,11 +303,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
   - [ ] Report format descriptions
   - [ ] How to interpret findings
   - [ ] Severity level definitions
-- [ ] Create `docs/AWS_SETUP.md`:
-  - [ ] AWS credentials setup
-  - [ ] Required IAM permissions
-  - [ ] Security Hub setup
-  - [ ] AWS Config setup
 
 ### 8.2 Developer Documentation
 - [ ] Create `docs/DEVELOPMENT.md`:
@@ -370,7 +337,7 @@ This document enumerates all steps required to build the AWS Quick Assess system
   - [ ] Fail on Critical/High findings
 - [ ] Create `.github/workflows/scan-main.yml`:
   - [ ] Trigger on push to main
-  - [ ] Run full scan (local + AWS)
+  - [ ] Run local repository scan
   - [ ] Upload reports as artifacts
   - [ ] Send notifications
 
@@ -413,8 +380,7 @@ This document enumerates all steps required to build the AWS Quick Assess system
 - [ ] Generate trend reports
 - [ ] Visualize improvements/regressions
 
-### 10.5 Integration with Security Tools
-- [ ] AWS Security Hub integration (push findings)
+### 10.5 Integration with External Tools
 - [ ] Jira integration (create tickets)
 - [ ] Slack/Teams notifications
 - [ ] Email notifications
@@ -445,7 +411,6 @@ This document enumerates all steps required to build the AWS Quick Assess system
 - [ ] Test against real Terraform repositories
 - [ ] Test against real CloudFormation stacks
 - [ ] Test against real CDK projects
-- [ ] Test against real AWS accounts
 - [ ] Validate all report formats
 - [ ] Test error handling and edge cases
 
@@ -551,18 +516,6 @@ wget https://github.com/gitleaks/gitleaks/releases/download/vX.X.X/gitleaks_X.X.
 tar xzf gitleaks_X.X.X_linux_x64.tar.gz && mv gitleaks /usr/local/bin/
 ```
 
-### AWS Tools
-```bash
-# AWS CLI
-pip install awscli
-
-# Prowler
-pip install prowler
-
-# ScoutSuite
-pip install scoutsuite
-```
-
 ---
 
 ## Success Criteria
@@ -573,7 +526,6 @@ pip install scoutsuite
 - [ ] Can scan CDK projects and generate reports
 - [ ] Can scan npm projects and generate reports
 - [ ] Can detect secrets in repositories
-- [ ] Can scan live AWS accounts and generate reports
 - [ ] Can generate reports in multiple formats (JSON, HTML, Markdown, CSV, SARIF)
 - [ ] All tests passing with >80% coverage
 - [ ] Documentation complete and accurate

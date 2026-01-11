@@ -106,15 +106,6 @@ RUN wget -q https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_V
     gitleaks version
 
 # ========================================
-# Install AWS CLI
-# ========================================
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
-    ./aws/install && \
-    rm -rf aws awscliv2.zip && \
-    aws --version
-
-# ========================================
 # Install Ruby gems (cfn-nag)
 # ========================================
 RUN gem install cfn-nag && \
@@ -144,7 +135,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Verify Python tool installations
 RUN checkov --version && \
-    prowler --version && \
     cfn-lint --version
 
 # ========================================

@@ -267,52 +267,6 @@ def scan_local(
 
 
 @cli.command()
-@click.option(
-    "--output-dir",
-    type=click.Path(),
-    default="/app/reports",
-    help="Output directory for reports",
-)
-@click.option(
-    "--regions",
-    multiple=True,
-    help="AWS regions to scan (default: from config)",
-)
-@click.pass_context
-def scan_aws(ctx, output_dir: str, regions: tuple):
-    """Scan live AWS account for security issues"""
-    click.echo("Scanning AWS account...")
-    click.echo(f"Config: {ctx.obj['config']}")
-    click.echo(f"Output: {output_dir}")
-    if regions:
-        click.echo(f"Regions: {', '.join(regions)}")
-    click.echo("\nThis is a placeholder. Full implementation coming soon.")
-
-
-@cli.command()
-@click.option(
-    "--repo-path",
-    type=click.Path(exists=True),
-    default="/repo",
-    help="Path to repository to scan",
-)
-@click.option(
-    "--output-dir",
-    type=click.Path(),
-    default="/app/reports",
-    help="Output directory for reports",
-)
-@click.pass_context
-def scan_all(ctx, repo_path: str, output_dir: str):
-    """Scan both local repository and AWS account"""
-    click.echo("Running full scan (local + AWS)...")
-    click.echo(f"Repository: {repo_path}")
-    click.echo(f"Config: {ctx.obj['config']}")
-    click.echo(f"Output: {output_dir}")
-    click.echo("\nThis is a placeholder. Full implementation coming soon.")
-
-
-@cli.command()
 @click.pass_context
 def list_tools(ctx):
     """List all available scanning tools and their status"""
@@ -339,10 +293,6 @@ def list_tools(ctx):
     click.echo("  - Safety (dependency vulnerabilities)")
     click.echo("\nSecrets Detection:")
     click.echo("  - Gitleaks")
-    click.echo("\nAWS Live:")
-    click.echo("  - AWS Security Hub")
-    click.echo("  - AWS Config")
-    click.echo("  - Prowler")
 
 
 @cli.command()

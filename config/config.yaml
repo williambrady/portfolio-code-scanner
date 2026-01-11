@@ -21,14 +21,6 @@ repository:
     - "test"
     - "**/fixtures"
 
-# AWS Configuration
-aws:
-  default_region: "us-east-1"
-  regions_to_scan:
-    - "us-east-1"
-  # Set to true to scan all regions (overrides regions_to_scan)
-  scan_all_regions: false
-
 # Severity Thresholds
 severity:
   # Levels: CRITICAL, HIGH, MEDIUM, LOW, INFO
@@ -145,15 +137,6 @@ tools:
       gitleaks: []  # Example: ["generic-api-key", "aws-access-token"]
     git_secrets: false  # Optional
 
-  # AWS Live Scanning
-  aws_live:
-    enabled: true
-    security_hub: true
-    config: true
-    trusted_advisor: false  # Requires Business/Enterprise support
-    prowler: true
-    scoutsuite: false  # Optional
-
 # Tool-Specific Configuration
 tool_config:
   checkov:
@@ -187,11 +170,6 @@ tool_config:
     config_path: null
     verbose: false
     redact: true
-
-  prowler:
-    services: []  # Empty = all services
-    severity: "critical,high,medium,low"
-    compliance: []  # e.g., ["cis_1.5_aws", "hipaa"]
 
   snyk:
     severity_threshold: "low"

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AWS Quick Assess is a Python-based security assessment utility for AWS infrastructure-as-code (IaC) and live AWS environments. It orchestrates multiple security scanning tools in a Docker container to provide comprehensive security analysis of Terraform, CloudFormation, CDK, and npm-based projects, plus live AWS account scanning.
+AWS Quick Assess is a Python-based security assessment utility for AWS infrastructure-as-code (IaC). It orchestrates multiple security scanning tools in a Docker container to provide comprehensive security analysis of Terraform, CloudFormation, CDK, and npm-based projects.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ AWS Quick Assess is a Python-based security assessment utility for AWS infrastru
 - `config_loader.py`: Loads and validates YAML config and environment variables
 
 **CLI Interface**
-- `cli.py`: Command-line argument parser exposing commands: `scan-local`, `scan-aws`, `scan-all`, `list-tools`, `validate-config`
+- `cli.py`: Command-line argument parser exposing commands: `scan-local`, `list-tools`, `validate-config`
 - `main.py`: Main orchestration logic that coordinates detection → scanning → aggregation → reporting
 
 ### Scanner Categories
@@ -47,9 +47,6 @@ AWS Quick Assess is a Python-based security assessment utility for AWS infrastru
 **Secrets Detection**
 - `secrets_scanner.py`: Gitleaks, TruffleHog (optional)
 
-**AWS Live Scanning**
-- `aws_scanner.py`: AWS Security Hub, AWS Config, Trusted Advisor, Prowler, ScoutSuite
-
 ## Development Commands
 
 ### Docker Operations
@@ -62,20 +59,6 @@ docker build -t aws-quick-assess .
 Run local repository scan:
 ```bash
 ./scripts/run-local-scan.sh /path/to/repo
-```
-
-Run AWS account scan:
-```bash
-# Set AWS credentials as environment variables first
-export AWS_ACCESS_KEY_ID=...
-export AWS_SECRET_ACCESS_KEY=...
-export AWS_REGION=us-east-1
-./scripts/run-aws-scan.sh
-```
-
-Run full scan (local + AWS):
-```bash
-./scripts/run-full-scan.sh /path/to/repo
 ```
 
 ### Testing
@@ -143,13 +126,6 @@ safety check
 
 ## Environment Variables
 
-Required for AWS scanning:
-- `AWS_ACCESS_KEY_ID`: AWS access key
-- `AWS_SECRET_ACCESS_KEY`: AWS secret key
-- `AWS_REGION`: AWS region (e.g., us-east-1)
-- `AWS_SESSION_TOKEN`: (Optional) For temporary credentials
-
-Optional:
 - `CONFIG_PATH`: Override default config.yaml path
 - `LOG_LEVEL`: Set logging verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 
@@ -189,7 +165,6 @@ docs/                   # Documentation
 - Finding deduplication uses MD5 hash of (file, line, rule_id, message) to identify duplicates
 - Severity levels follow: CRITICAL > HIGH > MEDIUM > LOW > INFO
 - Exit codes: 0 (clean), 1 (error), 2 (findings at or above fail threshold)
-- AWS scanners require appropriate IAM permissions (ReadOnly policies minimum)
 - **Rule Exclusions**: Configure in config.yaml under `tools.<scanner>.exclude_rules` to suppress specific findings (e.g., false positives, known exceptions)
 - **Path Exclusions**: Configure in config.yaml under `repository.excluded_paths` to skip directories like tests, fixtures, node_modules
 - **Security Best Practices**:

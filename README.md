@@ -1,11 +1,11 @@
 # AWS Quick Assess
 
-> Comprehensive security assessment tool for AWS Infrastructure-as-Code and live environments
+> Comprehensive security assessment tool for AWS Infrastructure-as-Code
 
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-available-2088FF?logo=github-actions&logoColor=white)](https://github.com/marketplace/actions/aws-quick-assess)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-AWS Quick Assess is a Docker-based security scanning platform that orchestrates multiple industry-leading security tools to provide comprehensive analysis of your AWS infrastructure code and live AWS accounts. It implements a multi-layered security scanning approach covering linting, security policies, dependency vulnerabilities, and secrets detection.
+AWS Quick Assess is a Docker-based security scanning platform that orchestrates multiple industry-leading security tools to provide comprehensive analysis of your AWS infrastructure code. It implements a multi-layered security scanning approach covering linting, security policies, dependency vulnerabilities, and secrets detection.
 
 **Available as a GitHub Action for seamless CI/CD integration!**
 
@@ -42,7 +42,6 @@ AWS Quick Assess is a Docker-based security scanning platform that orchestrates 
 - `Gitleaks` - Secrets and credentials detection
 - `npm audit` - JavaScript/TypeScript dependency vulnerabilities
 - `Snyk` - Advanced dependency and license scanning
-- `Prowler` - Live AWS account security assessment (planned)
 
 ### Reporting
 
@@ -81,7 +80,6 @@ See [GitHub Action Usage](#github-action) for full documentation.
 ### Prerequisites
 
 - Docker installed and running (for local usage)
-- For AWS scanning: AWS credentials with appropriate permissions
 
 ### Build the Docker Image
 
@@ -135,37 +133,6 @@ docker run --rm \
 **Helper Script:**
 ```bash
 ./scripts/run-local-scan.sh /path/to/repo [output-dir] [config-file]
-```
-
-### Scan AWS Account
-
-Scan your live AWS environment (coming soon):
-
-```bash
-export AWS_ACCESS_KEY_ID=your_access_key
-export AWS_SECRET_ACCESS_KEY=your_secret_key
-export AWS_REGION=us-east-1
-
-docker run --rm \
-  -e AWS_ACCESS_KEY_ID \
-  -e AWS_SECRET_ACCESS_KEY \
-  -e AWS_REGION \
-  -v $(pwd)/reports:/app/reports \
-  aws-quick-assess:latest \
-  scan-aws --output-dir /app/reports
-```
-
-**Helper Script:**
-```bash
-./scripts/run-aws-scan.sh [output-dir] [config-file]
-```
-
-### Full Scan (Local + AWS)
-
-Scan both repository and AWS account:
-
-```bash
-./scripts/run-full-scan.sh /path/to/repo [output-dir] [config-file]
 ```
 
 ### List Available Tools
@@ -286,13 +253,6 @@ execution:
 
 ## Environment Variables
 
-### Required for AWS Scanning
-- `AWS_ACCESS_KEY_ID` - AWS access key
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key
-- `AWS_REGION` - AWS region (default: us-east-1)
-- `AWS_SESSION_TOKEN` - For temporary credentials (optional)
-
-### Optional
 - `CONFIG_PATH` - Path to config.yaml (default: /app/config/config.yaml)
 - `LOG_LEVEL` - Logging verbosity (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 - `REPO_PATH` - Repository path override
@@ -612,9 +572,7 @@ aws-quick-assess/
 │       ├── markdown_formatter.py
 │       └── sarif_formatter.py   # GitHub Code Scanning format
 ├── scripts/
-│   ├── run-local-scan.sh        # Helper script for local scans
-│   ├── run-aws-scan.sh          # Helper script for AWS scans
-│   └── run-full-scan.sh         # Helper script for full scans
+│   └── run-local-scan.sh        # Helper script for local scans
 ├── tests/
 │   └── fixtures/                # Test data
 ├── action.yml                   # GitHub Action definition
@@ -698,7 +656,6 @@ pytest --cov=src --cov-report=html
 - [x] Path exclusions
 - [x] GitHub Action
 - [x] SARIF output format (GitHub Code Scanning)
-- [ ] AWS live scanning (Prowler integration)
 - [ ] CDK scanning
 - [ ] npm/Node.js dependency scanning
 - [ ] Custom policy definitions
@@ -732,7 +689,6 @@ This tool integrates and orchestrates the following open-source security tools:
 - [Bandit](https://github.com/PyCQA/bandit)
 - [Safety](https://github.com/pyupio/safety)
 - [Gitleaks](https://github.com/gitleaks/gitleaks)
-- [Prowler](https://github.com/prowler-cloud/prowler)
 - [Snyk](https://snyk.io/)
 
 ---
