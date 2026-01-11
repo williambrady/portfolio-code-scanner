@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AWS Quick Assess is a Python-based security assessment utility for AWS infrastructure-as-code (IaC). It orchestrates multiple security scanning tools in a Docker container to provide comprehensive security analysis of Terraform, CloudFormation, CDK, and npm-based projects.
+AWS Quick Assess is a Python-based security assessment utility for AWS infrastructure-as-code (IaC). It orchestrates multiple security scanning tools in a Docker container to provide comprehensive security analysis of Terraform, CloudFormation, Python, and npm-based projects.
 
 ## Architecture
 
@@ -17,35 +17,33 @@ AWS Quick Assess is a Python-based security assessment utility for AWS infrastru
 
 **Repository Detection**
 - `repo_detector.py`: Automatically identifies IaC frameworks and languages in a repository
-- Detects: Terraform (.tf), CloudFormation (.yaml/.json/.template), CDK (cdk.json), npm (package.json)
+- Detects: Terraform (.tf), CloudFormation (.yaml/.json/.template), Python (.py), npm (package.json)
 - Returns list of applicable scanners to run for that repository
 
 **Report Aggregation Pipeline**
 - `report_aggregator.py`: Collects findings from all scanners, normalizes format, deduplicates, categorizes by severity/layer
-- Formatters in `formatters/`: Convert aggregated findings to JSON, HTML, Markdown, CSV, SARIF formats
-- `report_writer.py`: Handles file system output with timestamps and archiving
+- Formatters in `formatters/`: Convert aggregated findings to JSON, HTML, Markdown, SARIF formats
 
 **Configuration Management**
-- `config.yaml`: Central configuration file for tool enablement, severity thresholds, Docker settings, AWS regions
+- `config.yaml`: Central configuration file for tool enablement, severity thresholds, output settings
 - `config_loader.py`: Loads and validates YAML config and environment variables
 
 **CLI Interface**
 - `cli.py`: Command-line argument parser exposing commands: `scan-local`, `list-tools`, `validate-config`
 - `main.py`: Main orchestration logic that coordinates detection → scanning → aggregation → reporting
 
-### Scanner Categories
+### Implemented Scanners
 
 **IaC Scanners**
 - `terraform_scanner.py`: terraform fmt/validate, TFLint, Checkov, tfsec, Trivy
 - `cloudformation_scanner.py`: cfn-lint, cfn-nag, Checkov
-- `cdk_scanner.py`: cdk-nag, language linters (ESLint/pylint), cdk synth + CFN scanning (planned)
 
 **Code Security Scanners**
-- `python_scanner.py`: Bandit (code security), Safety (dependency vulnerabilities)
-- `npm_scanner.py`: npm audit, Snyk, OWASP Dependency-Check (planned)
+- `python_scanner.py`: Bandit (code security), Safety (dependency vulnerabilities), Pylint (code quality)
+- `npm_scanner.py`: npm audit, Snyk IaC scanning
 
 **Secrets Detection**
-- `secrets_scanner.py`: Gitleaks, TruffleHog (optional)
+- `secrets_scanner.py`: Gitleaks
 
 ## Development Commands
 

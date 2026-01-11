@@ -134,7 +134,7 @@ def cli(ctx, config: str, verbose: bool):
     "--format",
     multiple=True,
     default=["json"],
-    help="Report format(s): json, html, markdown, csv, sarif",
+    help="Report format(s): json, html, markdown, sarif",
 )
 @click.option(
     "--fail-on-severity",
@@ -277,20 +277,17 @@ def list_tools(ctx):
     click.echo("  - Checkov")
     click.echo("  - tfsec")
     click.echo("  - Trivy")
-    click.echo("  - Terrascan")
     click.echo("\nCloudFormation:")
     click.echo("  - cfn-lint")
     click.echo("  - cfn-nag")
     click.echo("  - Checkov")
-    click.echo("\nCDK:")
-    click.echo("  - cdk-nag")
-    click.echo("  - Language linters (ESLint, pylint)")
     click.echo("\nnpm/Node.js:")
     click.echo("  - npm audit")
     click.echo("  - Snyk")
     click.echo("\nPython:")
     click.echo("  - Bandit (code security)")
     click.echo("  - Safety (dependency vulnerabilities)")
+    click.echo("  - Pylint (code quality)")
     click.echo("\nSecrets Detection:")
     click.echo("  - Gitleaks")
 
