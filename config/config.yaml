@@ -1,10 +1,10 @@
-# AWS Quick Assess Configuration
+# SDLC Code Scanner Configuration
 
 # Docker Configuration
 docker:
   base_image: "python:3.11-slim"
   dockerfile_path: "./Dockerfile"
-  container_name: "aws-quick-assess"
+  container_name: "sdlc-code-scanner"
   working_dir: "/app"
 
 # Repository Scanning Configuration
@@ -169,7 +169,7 @@ execution:
 # Logging Configuration
 logging:
   level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
-  file: "/app/logs/aws-quick-assess.log"
+  file: "/app/logs/sdlc-code-scanner.log"
   console: true
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 

@@ -1,4 +1,4 @@
-# CI workflow for testing the AWS Quick Assess action itself
+# CI workflow for testing the SDLC Code Scanner action itself
 name: CI
 
 on:
@@ -73,7 +73,7 @@ jobs:
         with:
           context: .
           push: false
-          tags: aws-quick-assess:test
+          tags: sdlc-code-scanner:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -85,7 +85,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t aws-quick-assess:test .
+        run: docker build -t sdlc-code-scanner:test .
 
       - name: Create output directory
         run: mkdir -p test-reports && chmod 777 test-reports
@@ -95,7 +95,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/tests/fixtures:/repo:ro \
             -v ${{ github.workspace }}/test-reports:/app/reports \
-            aws-quick-assess:test \
+            sdlc-code-scanner:test \
             scan-local --repo-path /repo --output-dir /app/reports --format json || true
 
       - name: Verify report generated

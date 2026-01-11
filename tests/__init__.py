@@ -1,3 +1,3 @@
 """
-AWS Quick Assess Test Suite
+SDLC Code Scanner Test Suite
 """

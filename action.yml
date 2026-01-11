@@ -1,4 +1,4 @@
-name: 'AWS Quick Assess'
+name: 'SDLC Code Scanner'
 description: 'Security scanner for AWS Infrastructure-as-Code (Terraform, CloudFormation, CDK) with multi-tool analysis'
 author: 'Crofton Cloud'
 

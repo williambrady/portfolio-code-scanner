@@ -1,5 +1,5 @@
 """
-Basic tests for AWS Quick Assess
+Basic tests for SDLC Code Scanner
 
 These tests verify the core scanner infrastructure works correctly.
 """
