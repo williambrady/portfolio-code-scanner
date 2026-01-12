@@ -375,6 +375,13 @@ echo "Total Findings: $TOTAL"
 echo "Exit Code: $EXIT_CODE"
 echo ""
 
+# Fix permissions on report directory so GitHub runner can read the files
+# Docker container runs as root, but runner user needs access for artifact upload
+if [[ -d "$REPORT_DIR" ]]; then
+    find "$REPORT_DIR" -type d -exec chmod 755 {} + 2>/dev/null || true
+    find "$REPORT_DIR" -type f -exec chmod 644 {} + 2>/dev/null || true
+fi
+
 # If we used fallback report directory, try to copy reports to workspace
 if [[ "${FALLBACK_REPORT_DIR:-}" == "true" ]]; then
     WORKSPACE_REPORT_DIR="${GITHUB_WORKSPACE}/.sdlc-code-scanner-reports"
