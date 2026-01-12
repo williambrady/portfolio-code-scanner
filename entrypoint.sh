@@ -316,17 +316,17 @@ findings.sort(key=lambda x: severity_order.get(x.get('severity', 'INFO'), 5))
 # Group by severity for cleaner output
 current_severity = None
 for finding in findings:
-    severity = finding.get('severity', 'UNKNOWN')
+    severity = finding.get('severity', 'INFO')
     tool = finding.get('tool', 'unknown')
     rule_id = finding.get('rule_id', 'N/A')
     title = finding.get('title', finding.get('rule_id', 'Unknown'))
     file_path = finding.get('file_path', 'N/A')
-    line = finding.get('line_number', '')
+    line = finding.get('line_number')
     resource = finding.get('resource', '')
     description = finding.get('description', '')
     remediation = finding.get('remediation', '')
 
-    location = f'{file_path}:{line}' if line else file_path
+    location = f'{file_path}:{line}' if line is not None else file_path
 
     # Print severity header if changed
     if severity != current_severity:
