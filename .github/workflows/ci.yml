@@ -137,29 +137,4 @@ jobs:
           echo "Scan status: ${{ steps.scan.outputs.scan-status }}"
           echo "Report path: ${{ steps.scan.outputs.report-path }}"
 
-  release:
-    name: Release
-    needs: [test, lint, build, integration-test, action-test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+  # Note: Docker image publishing is handled by release-please.yml on release creation

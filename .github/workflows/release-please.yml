@@ -1,0 +1,75 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      major: ${{ steps.release.outputs.major }}
+      minor: ${{ steps.release.outputs.minor }}
+    steps:
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Update floating version tags (v1, v1.2) when a release is created
+  update-tags:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update major version tag
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git tag -fa v${{ needs.release-please.outputs.major }} -m "Update v${{ needs.release-please.outputs.major }} tag"
+          git push origin v${{ needs.release-please.outputs.major }} --force
+
+      - name: Update minor version tag
+        run: |
+          git tag -fa v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} -m "Update v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} tag"
+          git push origin v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} --force
+
+  # Publish Docker image on release
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ needs.release-please.outputs.tag_name }}
+            ghcr.io/${{ github.repository }}:v${{ needs.release-please.outputs.major }}
+            ghcr.io/${{ github.repository }}:v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}
