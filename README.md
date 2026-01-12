@@ -3,7 +3,7 @@
 > Comprehensive security assessment tool for AWS Infrastructure-as-Code
 
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-available-2088FF?logo=github-actions&logoColor=white)](https://github.com/marketplace/actions/sdlc-code-scanner)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial-blue.svg)](LICENSE)
 
 SDLC Code Scanner is a Docker-based security scanning platform that orchestrates multiple industry-leading security tools to provide comprehensive analysis of your AWS infrastructure code. It implements a multi-layered security scanning approach covering linting, security policies, dependency vulnerabilities, and secrets detection.
 
