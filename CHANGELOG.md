@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/williambrady/portfolio-code-scanner/compare/v1.2.0...v1.2.1) (2026-01-12)
+
+
+### Bug Fixes
+
+* set permissions on report directory for artifact upload ([#9](https://github.com/williambrady/portfolio-code-scanner/issues/9)) ([de5d53f](https://github.com/williambrady/portfolio-code-scanner/commit/de5d53f4b02c0f9c12270f067a6550448f4e5811))
+
 ## [1.2.0](https://github.com/williambrady/portfolio-code-scanner/compare/v1.1.1...v1.2.0) (2026-01-12)
 
 
