@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/williambrady/portfolio-code-scanner/compare/v1.2.1...v1.2.2) (2026-01-12)
+
+
+### Bug Fixes
+
+* update license references from MIT to PolyForm Noncommercial ([#12](https://github.com/williambrady/portfolio-code-scanner/issues/12)) ([b78a975](https://github.com/williambrady/portfolio-code-scanner/commit/b78a9751539eedb2b51f6b80b09a7b309d53f293))
+
 ## [1.2.1](https://github.com/williambrady/portfolio-code-scanner/compare/v1.2.0...v1.2.1) (2026-01-12)
 
 
