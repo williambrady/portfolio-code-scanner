@@ -20,6 +20,7 @@ from src.scanners.cloudformation_scanner import CloudFormationScanner
 from src.scanners.secrets_scanner import SecretsScanner
 from src.scanners.python_scanner import PythonScanner
 from src.scanners.npm_scanner import NPMScanner
+from src.scanners.container_scanner import ContainerScanner
 from src.formatters.json_formatter import JSONFormatter
 from src.formatters.html_formatter import HTMLFormatter
 from src.formatters.markdown_formatter import MarkdownFormatter
@@ -193,6 +194,8 @@ def scan_local(
         # Always run NPM scanner if enabled - it has IaC scanning capability via Snyk
         if config.get("tools", {}).get("npm", {}).get("enabled", True):
             scanners.append(NPMScanner(config, logger))
+        if "container" in applicable_scanners:
+            scanners.append(ContainerScanner(config, logger))
         if "secrets" in applicable_scanners:
             scanners.append(SecretsScanner(config, logger))
 
@@ -288,6 +291,8 @@ def list_tools(ctx):
     click.echo("  - Bandit (code security)")
     click.echo("  - Safety (dependency vulnerabilities)")
     click.echo("  - Pylint (code quality)")
+    click.echo("\nContainer:")
+    click.echo("  - Trivy (image vulnerability scanning)")
     click.echo("\nSecrets Detection:")
     click.echo("  - Gitleaks")
 

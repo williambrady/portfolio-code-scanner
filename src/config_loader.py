@@ -79,6 +79,16 @@ class ConfigLoader:
                     "enabled": True,
                     "gitleaks": True,
                 },
+                "container": {
+                    "enabled": True,
+                    "build_images": True,
+                    "cleanup_images": True,
+                    "image_name_prefix": "scan-",
+                    "severities": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+                    "ignore_unfixed": False,
+                    "build_timeout": 600,
+                    "scan_timeout": 300,
+                },
             },
             "severity": {
                 "fail_on": "HIGH",

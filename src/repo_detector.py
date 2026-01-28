@@ -38,6 +38,7 @@ class RepoDetector:
             "python": self.has_python(),
             "typescript": self.has_typescript(),
             "javascript": self.has_javascript(),
+            "container": self.has_dockerfile(),
         }
 
     def has_terraform(self) -> bool:
@@ -108,6 +109,16 @@ class RepoDetector:
         """Check if repository contains JavaScript files"""
         return self._has_files_with_extension([".js", ".jsx"])
 
+    def has_dockerfile(self) -> bool:
+        """Check if repository contains Dockerfiles"""
+        dockerfile_names = ["Dockerfile", "dockerfile", "Containerfile"]
+
+        for root, _, files in os.walk(self.repo_path):
+            for file in files:
+                if file in dockerfile_names or file.startswith("Dockerfile."):
+                    return True
+        return False
+
     def get_applicable_scanners(self) -> List[str]:
         """
         Get list of scanner types applicable to this repository
@@ -132,6 +143,9 @@ class RepoDetector:
 
         if detections["python"]:
             scanners.append("python")
+
+        if detections["container"]:
+            scanners.append("container")
 
         # Always run secrets scanner
         scanners.append("secrets")
