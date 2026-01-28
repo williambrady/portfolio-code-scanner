@@ -81,6 +81,14 @@ class ContainerScanner(ScannerBase):
         image_name_prefix = self.container_config.get("image_name_prefix", "scan-")
 
         if build_images:
+            # Check for docker availability when building images
+            docker_check, _, _ = self.execute_command(["docker", "--version"])
+            if docker_check != 0:
+                self.logger.warning(
+                    "Docker not found, skipping container image building"
+                )
+                return self.findings
+
             for dockerfile in dockerfiles:
                 self.findings.extend(
                     self._build_and_scan(path, dockerfile, image_name_prefix)
@@ -108,7 +116,13 @@ class ContainerScanner(ScannerBase):
             build_context = repo_path
         else:
             relative_dir = os.path.relpath(dockerfile_dir, repo_path)
+            # Sanitize for Docker image naming: lowercase, alphanumeric and hyphens only
             safe_name = relative_dir.replace("/", "-").replace("\\", "-")
+            safe_name = safe_name.lower()
+            safe_name = "".join(
+                c if c.isalnum() or c == "-" else "-" for c in safe_name
+            )
+            safe_name = safe_name.strip("-")  # Remove leading/trailing hyphens
             image_tag = f"{prefix}{safe_name}:latest"
             build_context = dockerfile_dir
 
