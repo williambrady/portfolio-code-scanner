@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/williambrady/portfolio-code-scanner/compare/v1.2.2...v1.3.0) (2026-01-28)
+
+
+### Features
+
+* add container image vulnerability scanning ([#14](https://github.com/williambrady/portfolio-code-scanner/issues/14)) ([7abe74c](https://github.com/williambrady/portfolio-code-scanner/commit/7abe74c727964f4c355cc6fdaec367197d9f2cca))
+
 ## [1.2.2](https://github.com/williambrady/portfolio-code-scanner/compare/v1.2.1...v1.2.2) (2026-01-12)
 
 
