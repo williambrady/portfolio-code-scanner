@@ -120,6 +120,21 @@ tools:
       gitleaks:
         - "generic-api-key"  # High false positive rate
 
+  # Container Image Scanning
+  container:
+    enabled: true
+    build_images: true  # Build images from Dockerfiles before scanning
+    cleanup_images: true  # Remove built images after scanning
+    image_name_prefix: "scan-"  # Prefix for built image names
+    severities: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"  # Severity levels to report
+    ignore_unfixed: false  # Skip vulnerabilities without fixes
+    build_timeout: 600  # Timeout for docker build (seconds)
+    scan_timeout: 300  # Timeout for trivy scan (seconds)
+    # images: []  # Optional: scan specific pre-built images instead of building
+    # Rule exclusions/exceptions
+    exclude_rules:
+      trivy: []  # Example: ["CVE-2021-44228"]
+
 # Tool-Specific Configuration
 tool_config:
   checkov:

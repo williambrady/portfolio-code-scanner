@@ -17,7 +17,7 @@ SDLC Code Scanner is a Python-based security assessment utility for AWS infrastr
 
 **Repository Detection**
 - `repo_detector.py`: Automatically identifies IaC frameworks and languages in a repository
-- Detects: Terraform (.tf), CloudFormation (.yaml/.json/.template), Python (.py), npm (package.json)
+- Detects: Terraform (.tf), CloudFormation (.yaml/.json/.template), Python (.py), npm (package.json), Dockerfiles
 - Returns list of applicable scanners to run for that repository
 
 **Report Aggregation Pipeline**
@@ -44,6 +44,9 @@ SDLC Code Scanner is a Python-based security assessment utility for AWS infrastr
 
 **Secrets Detection**
 - `secrets_scanner.py`: Gitleaks
+
+**Container Security**
+- `container_scanner.py`: Trivy image vulnerability scanning (builds and scans Docker images)
 
 ## Development Commands
 
